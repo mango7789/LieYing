@@ -17,7 +17,13 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
+from django.views.generic import RedirectView
+
+import users.views as user_view
+import resumes.views as resume_view
+import jobs.views as job_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", RedirectView.as_view(url='/login/', permanent=False))
 ]

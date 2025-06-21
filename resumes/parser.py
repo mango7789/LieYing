@@ -5,15 +5,8 @@ import json
 import random
 import logging
 from bs4 import BeautifulSoup
-from typing import Dict
+from typing import Dict, Final
 
-# 移除所有与Selenium相关的导入
-# 保留必要的工具函数
-from utils import setup_logger, load_json, init_dirs, format_elapsed_time
-
-# 修改配置路径
-CONFIG_PATH: Final = "./config/local.json"  # 可以改为本地配置
-TEMPLATE_PATH: Final = "./template/task.json"
 
 def parse_html_file(html_path: str) -> Dict:
     """解析本地HTML文件并提取简历数据"""
@@ -176,12 +169,12 @@ def process_html_directory(input_dir: str, output_file: str):
     logging.info(f"处理完成! 共解析 {len(all_data)} 个文件, 结果保存至: {output_file}")
 
 if __name__ == "__main__":
-    # 初始化
-    init_dirs()
-    setup_logger(True)  # 启用日志
+    # # 初始化
+    # init_dirs()
+    # setup_logger(True)  # 启用日志
     
     # 示例用法
-    input_directory = "./html_files"  # 存放HTML文件的目录
+    input_directory = "./upload"  # 存放HTML文件的目录
     output_json = "./output/resumes.json"  # 输出JSON文件路径
     
     process_html_directory(input_directory, output_json)

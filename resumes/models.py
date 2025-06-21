@@ -15,6 +15,10 @@ class Resume(models.Model):
         related_name="+",
         verbose_name="当前版本",
     )
+    
+    class Meta:
+        verbose_name = "简历"
+        verbose_name_plural = "简历"
 
 
 class ResumeVersion(models.Model):
