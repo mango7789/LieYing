@@ -1,0 +1,46 @@
+{% load static %}
+{% load custom_tags %}
+
+<header class="py-2 border-bottom">
+    <div class="container">
+        <nav class="d-flex align-items-center justify-content-between">
+            <!-- 左侧 Logo -->
+            <div class="d-flex align-items-center">
+                <i class="fas fa-spider me-2"></i>
+                <span class="fw-bold fs-5">猎鹰</span>
+            </div>
+
+            <!-- 中间导航栏 -->
+            <div class="flex-grow-1 d-flex justify-content-center">
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {% if request.path|first_path_segment == 'home' %}active{% endif %}">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {% if request.path|first_path_segment == 'resume' %}active{% endif %}">人才库</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {% if request.path|first_path_segment == 'job' %}active{% endif %}">岗位库</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {% if request.path|first_path_segment == 'chat' %}active{% endif %}">沟通</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 右侧用户操作 -->
+            <div class="nav-links ms-auto d-flex align-items-center gap-2">
+                {% if user.is_authenticated %}
+                    <span class="fw-semibold">你好，{{ user.username }}</span>
+                    <form method="post" action="{% url 'logout' %}" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">登出</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm">登录</a>
+                    <a href="{% url 'register' %}" class="btn btn-outline-success btn-sm">注册</a>
+                {% endif %}
+            </div>
+        </nav>
+    </div>
+</header>

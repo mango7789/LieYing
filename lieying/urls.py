@@ -24,6 +24,15 @@ import resumes.views as resume_view
 import jobs.views as job_view
 
 urlpatterns = [
+    # 超级管理员
     path("admin/", admin.site.urls),
+    # 用户/管理员 处理注册、登录、权限管理
     path("", RedirectView.as_view(url="/login/", permanent=False)),
+    path("login/", user_view.login, name="login"),
+    path("logout/", user_view.logout, name="logout"),
+    path("register/", user_view.register, name="register"),
+    # 简历模块
+    path("resume/list/", resume_view.resume_list, name="resume_list"),
+    path("resume/upload/", resume_view.resume_upload, name="resume_upload"),
+    path("resumes/<str:resume_id>/", resume_view.resume_detail, name="resume_detail"),
 ]

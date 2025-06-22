@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-center text-white p-2" style="background-color: #4f04b1;">关键字检索</h2>
+<div style="text-align: center; margin-top: 100px;">
+    <form method="get" action="{% url 'Query_KeywordSearch' %}" class="d-flex justify-content-center align-items-center"
+        style="gap: 10px;">
+        <input type="text" name="q" placeholder="请输入关键词" value="{{ query }}" class="form-control"
+            style="width: 300px; padding: 10px;">
+        <button type="submit" class="btn btn-primary">检索</button>
+    </form>
+</div>
+
+{% if query %}
+<h5 class="mb-3 text-secondary">
+    <i class="bi bi-search me-2"></i>关键词: "{{ query }}"
+</h5>
+<table class="table table-hover">
+    <thead class="text-center">
+        <tr class="pretty-thead-row">
+            <th>内容ID</th>
+            <th>关键词</th>
+            <th>网页URL</th>
+            <th>内容类型</th>
+            <th>内容文本</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for content in results %}
+        <tr>
+            <td>{{ content.content_id }}</td>
+            <td>{{ content.keywords }}</td>
+            <td>
+                <!-- <a href="{% url 'Query_PageContents' content.webpage.id %}">{{ content.webpage.url|truncatewords:2 }}</a> -->
+                <a href="{% url 'Query_PageContents' content.webpage.id %}" 
+                   title="{{ content.webpage.url }}"
+                   class="url-display">
+                    
+                    {% if content.webpage.url|length > 50 %}
+                        {{ content.webpage.url|truncatechars:47 }}...
+                    {% else %}
+                        {{ content.webpage.url }}
+                    {% endif %}
+                </a>
+            </td>
+            <td>{{ content.get_type_display }}</td>
+            <td>{{ content.text|truncatewords:2 }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">无匹配结果</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<section class="activity mb-5">
+    <h3 class="mb-4 pb-2 border-bottom border-3 border-primary">最近爬取记录</h3>
+    <ul class="list-group">
+        {% for page in recent_pages %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ page|truncatechars:50 }} - {{ page.crawl_time|date:"Y-m-d H:i" }}
+            <a href="{% url 'Query_SitePages' page.website.id %}" class="btn btn-sm btn-outline-primary">查看网页</a>
+        </li>
+        {% empty %}
+        <li class="list-group-item">暂无爬取记录</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+{% endblock %}

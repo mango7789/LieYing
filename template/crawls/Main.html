@@ -1,0 +1,69 @@
+{% extends "Layout.html" %}
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <h1>欢迎使用 DataSpider 数据库管理系统</h1>
+        <p>实时获取、精准分析、直观展示 - 让数据为您创造价值</p>
+        <div class="cta-buttons">
+                    <a href=# class="btn btn-primary">开始数据探索</a>
+        </div>
+    <div>
+</section>
+
+<section class="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>核心功能</h2>
+                <p>我们的平台提供从数据采集到可视化展示的全流程解决方案</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cloud-download-alt"></i>
+                    </div>
+                    <h3>智能爬取</h3>
+                    <p>自动化采集各类网站数据，支持多种数据格式，可配置定时任务和增量更新。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <h3>数据中枢</h3>
+                    <p>提供强大的后台功能，实现数据库记录的增、删、改、查全功能管理。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>​​多维透视</h3>
+                    <p>一键穿透数据迷雾，原始URL链路与抓取内容同屏联动，一图尽览、一查即溯。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+<section class="stats mb-5">
+    <div class="row text-center g-4">
+        <div class="col-md-4">
+            <div class="card p-3">
+                <div class="stat-value">{{ website_count }}</div>
+                <div class="stat-label">活跃数据源</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3">
+                <div class="stat-value">{{ page_count }}</div>
+                <div class="stat-label">库内网页总数</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3">
+                <div class="stat-value">{{ keyword_count }}</div>
+                <div class="stat-label">库内关键词记录</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

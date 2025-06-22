@@ -1,0 +1,14 @@
+{% if messages %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const toastEl = document.getElementById('message-toast');
+    const toastBody = toastEl.querySelector('.toast-body');
+
+    {% for message in messages %}
+      toastBody.textContent = "{{ message|escapejs }}";
+      const toast = new bootstrap.Toast(toastEl);
+      toast.show();
+    {% endfor %}
+  });
+</script>
+{% endif %}

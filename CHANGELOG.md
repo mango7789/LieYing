@@ -1,4 +1,7 @@
 ## 2025.06.21
+<details>
+  <summary>点击展开表结构</summary>
+
 ### ER
 - 用户
   - 名称
@@ -46,3 +49,12 @@
   - 分数来源
   - 打分时间
   - 更新时间
+
+</details>
+
+
+## 2025.06.22
+- 将 `Base.html` 继续拆分成不同的 components，模块化前端代码
+- 写了 resumes 模块的 list, upload(partial), detail(partial) 及对应的前端界面。后续需要接入 parser，优化前端代码
+- 前端中人才库可以通过鼠标悬浮展示 简历列表/简历上传，隔离不同处理逻辑
+- users 模块的登录由 cyy 来写

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-center mb-5 fw-bold text-primary">爬取任务状态</h2>
+
+    <!-- 正在爬取 -->
+    <section class="mb-5">
+        <h3 class="mb-4 text-warning">正在爬取中</h3>
+        {% if running_tasks %}
+        <div class="list-group">
+            {% for task in running_tasks %}
+            <div class="list-group-item">
+                <strong>{{ task.website.domain }}</strong><br>
+                开始时间: <span class="text-muted">{{ task.start_time|date:"Y-m-d H:i:s" }}</span><br>
+                状态: <span class="text-warning fw-bold">正在爬取</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">当前没有正在进行的爬取任务。</div>
+        {% endif %}
+    </section>
+
+    <!-- 已完成 -->
+    <section class="mb-5">
+        <h3 class="mb-4 text-success">已完成</h3>
+        {% if completed_tasks %}
+        <div class="list-group">
+            {% for task in completed_tasks %}
+            <div class="list-group-item">
+                <strong>{{ task.website.domain }}</strong><br>
+                开始时间: <span class="text-muted">{{ task.start_time|date:"Y-m-d H:i:s" }}</span><br>
+                完成时间: <span class="text-muted">{{ task.end_time|date:"Y-m-d H:i:s" }}</span><br>
+                状态: <span class="text-success fw-bold">已完成</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">暂无完成的任务。</div>
+        {% endif %}
+    </section>
+
+    <!-- 失败任务 -->
+    <section class="mb-5">
+        <h3 class="mb-4 text-danger">失败的任务</h3>
+        {% if failed_tasks %}
+        <div class="list-group">
+            {% for task in failed_tasks %}
+            <div class="list-group-item">
+                <strong>{{ task.website.domain }}</strong><br>
+                开始时间: <span class="text-muted">{{ task.start_time|date:"Y-m-d H:i:s" }}</span><br>
+                状态: <span class="text-danger fw-bold">失败</span><br>
+                错误信息: <span class="text-danger">{{ task.error_msg }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">暂无失败任务。</div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}
