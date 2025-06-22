@@ -25,5 +25,5 @@ import jobs.views as job_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", RedirectView.as_view(url='/login/', permanent=False))
+    path("", RedirectView.as_view(url="/login/", permanent=False)),
 ]
