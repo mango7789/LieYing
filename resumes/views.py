@@ -1,7 +1,10 @@
-import logging
+import os, logging
 from django.db.models import Q
 from django.contrib import messages
 from django.http import JsonResponse
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
@@ -11,9 +14,10 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Resume, UploadRecord
 from .forms import ResumeForm
 from .constants import *
-from .parser import parse_html_file
+from .parser import Parser
 from core.utils.crypto import decrypt_params
 
+resume_parser = Parser()
 
 # Create your views here.
 @login_required
@@ -133,6 +137,15 @@ def resume_upload(request):
                 "message": "不支持的文件类型。请上传 Excel、HTML 或 PDF 文件。",
             }
         )
+        
+    local_path = os.path.join(UPLOAD_FOLDER, filename)
+    full_path = os.path.join(settings.MEDIA_ROOT, local_path)
+
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    with open(full_path, "wb+") as destination:
+        for chunk in uploaded_file.chunks():
+            destination.write(chunk)
+
     upload_record = UploadRecord.objects.create(
         user=request.user,
         filename=filename,
@@ -141,7 +154,7 @@ def resume_upload(request):
     )
 
     try:
-        resume_id, resume_data = "demo123456", {}
+        resume_id, resume_data = resume_parser.parse(local_path)
         resume_obj, created = Resume.objects.get_or_create(resume_id=resume_id)
 
         # 覆盖原简历字段

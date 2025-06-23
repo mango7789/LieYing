@@ -24,6 +24,9 @@ import users.views as user_view
 import resumes.views as resume_view
 import jobs.views as job_view
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     # 超级管理员
     path("admin/", admin.site.urls),
@@ -47,4 +50,4 @@ urlpatterns = [
         name="resume_detail",
     ),
     path("resume/edit/<str:resume_id>/", resume_view.resume_edit, name="resume_edit"),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
