@@ -12,7 +12,12 @@
   ```
 - 导入测试数据
   ```bash
-  mysql -u root -p < lieying.sql
+  USE lieying;
+  source lieying.sql;
+  ```
+- 创建超级管理员，并在 [127.0.0.1:8000/admin](http://127.0.0.1:8000/admin) 登录 
+  ```bash
+  python manage.py createsuperuser
   ```
 - 启动 app
   ```bash
