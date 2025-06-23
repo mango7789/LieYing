@@ -117,8 +117,37 @@ def resume_upload(request):
     )
 
     try:
-        resume_id, resume_data = "demo123456", {}
-        resume_obj, created = Resume.objects.get_or_create(resume_id=resume_id)
+        (
+            resume_id,
+            name,
+            status,
+            personal_info,
+            phone,
+            email,
+            expected_positions,
+            education,
+            certificates,
+            skills,
+            self_evaluation,
+            project_experiences,
+            working_experiences,
+            resume_data,
+        ) = ("demo123456", {})
+        resume_obj, created = Resume.objects.get_or_create(
+            resume_id=resume_id,
+            name=name,
+            status=status,
+            personal_info=personal_info,
+            phone=phone,
+            email=email,
+            expected_positions=expected_positions,
+            education=education,
+            certificates=certificates,
+            skills=skills,
+            self_evaluation=self_evaluation,
+            project_experiences=project_experiences,
+            working_experiences=working_experiences,
+        )
 
         # 覆盖原简历字段
         for field, value in resume_data.items():
