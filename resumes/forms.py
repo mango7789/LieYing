@@ -12,6 +12,7 @@ class ResumeForm(forms.ModelForm):
 
     def clean_json_field(self, field_name):
         data = self.cleaned_data.get(field_name, "[]")
+        # logging.debug(data)
         try:
             return json.loads(data)
         except Exception:

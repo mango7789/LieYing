@@ -41,6 +41,7 @@ urlpatterns = [
     # 简历模块
     path("resume/list/", resume_view.resume_list, name="resume_list"),
     path("resume/upload/", resume_view.resume_upload, name="resume_upload"),
+    path("resume/confirm/", resume_view.resume_confirm, name="resume_confirm"),
     path(
         "resume/upload/page", resume_view.resume_upload_page, name="resume_upload_page"
     ),

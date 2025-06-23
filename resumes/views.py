@@ -1,4 +1,4 @@
-import os, logging
+import os, json, logging
 from django.db.models import Q
 from django.contrib import messages
 from django.http import JsonResponse
@@ -157,31 +157,56 @@ def resume_upload(request):
     # TODO: 简历解析后需要 HH 确认并保存
     try:
         resume_id, resume_dict = resume_parser.parse(full_path)
-
         logging.debug(f"解析结果：{resume_dict}")
-
-        resume_obj, created = Resume.objects.get_or_create(
-            resume_id=resume_id, defaults=resume_dict
-        )
-
-        # 覆盖原简历字段
-        if not created:
-            for field, value in resume_dict.items():
-                setattr(resume_obj, field, value)
-            resume_obj.save()
-
         upload_record.parse_status = "success"
-        upload_record.resume = resume_obj
         upload_record.save()
 
         return JsonResponse(
-            {"success": True, "message": f"{filename} 上传成功且解析完成！"}
+            {
+                "success": True,
+                "message": f"{filename} 上传成功且解析完成，请确认信息后保存。",
+                "resume_id": resume_id,
+                "resume_data": resume_dict,
+                "upload_record_id": upload_record.id,
+            }
         )
+
     except Exception as e:
         # 解析失败
-        return JsonResponse(
-            {"success": False, "message": f"{filename} 上传成功，但解析失败: {str(e)}"}
-        )
+        if settings.DEBUG:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": f"{filename} 上传成功，但解析失败: {str(e)}",
+                }
+            )
+        else:
+            return JsonResponse(
+                {"success": False, "message": f"{filename} 上传成功，但解析失败！"}
+            )
+
+
+@require_POST
+@login_required
+def resume_confirm(request):
+    data = json.loads(request.body)
+    resume_id = data.get("resume_id")
+    resume_dict = data.get("resume_data")
+    record_id = data.get("upload_record_id")
+
+    resume_obj, created = Resume.objects.get_or_create(
+        resume_id=resume_id, defaults=resume_dict
+    )
+    if not created:
+        for field, value in resume_dict.items():
+            setattr(resume_obj, field, value)
+        resume_obj.save()
+
+    UploadRecord.objects.filter(id=record_id).update(
+        parse_status="success", resume=resume_obj
+    )
+
+    return JsonResponse({"success": True, "message": "简历已确认并保存！"})
 
 
 @login_required

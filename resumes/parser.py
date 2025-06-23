@@ -10,6 +10,7 @@ from typing import Dict, Final
 import fitz
 from .models import Resume
 
+
 class Parser:
     def __init__(self):
         pass
@@ -27,9 +28,9 @@ class Parser:
             resume_id = data["resume_id"]
 
         logging.info(f"文件解析完成: {resume_id}")
-        
+
         data = self._clean_dict(data)
-        
+
         return resume_id, data
 
     def _parse_html(self, html_path: str) -> Dict:
@@ -43,37 +44,41 @@ class Parser:
                 html_content = f.read()
 
             # 使用BeautifulSoup解析HTML
-            soup = BeautifulSoup(html_content, 'html.parser')
-            
+            soup = BeautifulSoup(html_content, "html.parser")
+
             # 提取简历ID
             resume_id_elem = soup.select_one('div[class*="BTVlw"] span')
-            data_dict["resume_id"] = resume_id_elem.text.strip()[5:] if resume_id_elem else ""
-            
+            data_dict["resume_id"] = (
+                resume_id_elem.text.strip()[5:] if resume_id_elem else ""
+            )
+
             # 提取最后登录时间
             last_login_elem = soup.select_one('span:contains("最后一次登录时间")')
-            data_dict["last_login"] = last_login_elem.text.strip()[9:] if last_login_elem else ""
-            
+            data_dict["last_login"] = (
+                last_login_elem.text.strip()[9:] if last_login_elem else ""
+            )
+
             # 提取状态
-            status_elem = soup.select_one('span.user-status-tag')
+            status_elem = soup.select_one("span.user-status-tag")
             data_dict["status"] = status_elem.text.strip() if status_elem else ""
-            
+
             # 提取个人信息
             personal_info = []
-            info_elems = soup.select('div.sep-info')
+            info_elems = soup.select("div.sep-info")
             for elem in info_elems:
                 strings = list(elem.stripped_strings)
                 filtered = [s for s in strings if s]
                 personal_info.append(" ".join(filtered))
             data_dict["personal_info"] = " | ".join(personal_info)
-            
+
             # 提取求职意向
             job_intention = []
             job_intention_div = soup.select_one('h3:contains("求职意向") + div.tabs')
             if job_intention_div:
-                position = job_intention_div.select_one('span.title[title]')
-                location = job_intention_div.select_one('span.title:not([title])')
-                salary = job_intention_div.select_one('span.salary')
-                
+                position = job_intention_div.select_one("span.title[title]")
+                location = job_intention_div.select_one("span.title:not([title])")
+                salary = job_intention_div.select_one("span.salary")
+
                 if position and position.text.strip():
                     job_intention.append(f"职位: {position.text.strip()}")
                 if location and location.text.strip():
@@ -82,11 +87,15 @@ class Parser:
                     job_intention.append(f"薪资: {salary.text.strip()}")
 
             if not job_intention:
-                intention_elems = soup.select('#resume-detail-job-exp-info > div:nth-child(1) > div:nth-child(1) > span')
+                intention_elems = soup.select(
+                    "#resume-detail-job-exp-info > div:nth-child(1) > div:nth-child(1) > span"
+                )
                 for elem in intention_elems:
                     if elem.text.strip():
                         job_intention.append(elem.text.strip())
-            data_dict["expected_positions"] = " | ".join(job_intention) if job_intention else "未提供求职意向"
+            data_dict["expected_positions"] = (
+                " | ".join(job_intention) if job_intention else "未提供求职意向"
+            )
 
             # 提取资格证书
             certificates = []

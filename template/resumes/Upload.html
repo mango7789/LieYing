@@ -3,35 +3,113 @@
 
 {% block content %}
 <section class="features">
-    <div class="section-title">
-        <h2>简历上传</h2>
+  <div class="section-title">
+    <h2>简历上传与确认</h2>
+  </div>
+
+  <div class="row">
+    <!-- 左侧：上传 -->
+    <div class="col-md-4">
+    <form id="upload-form" action="{% url 'resume_upload' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div id="upload-area" class="border border-primary rounded p-4 text-center" style="cursor: pointer;">
+            <i class="bi bi-upload" style="font-size: 2rem;"></i>
+            <p class="mt-2 mb-0 text-muted">点击上传简历文件<br><small>支持 PDF / Excel / HTML</small></p>
+        </div>
+        <input type="file" name="file" id="file-input" accept=".pdf,.html,.htm,.xls,.xlsx,.csv" hidden>
+    </form>
     </div>
 
-    <!-- 上传 Excel -->
-    <form method="post" action="{% url 'resume_upload' %}" enctype="multipart/form-data" class="mb-3 upload-form">
-        {% csrf_token %}
-        <label class="form-label">上传 Excel 文件</label>
-        <input type="file" name="file" accept=".csv,.xls,.xlsx" required class="form-control form-control-sm mb-2">
-        <button type="submit" class="btn btn-primary btn-sm">上传 CSV/Excel</button>
-    </form>
 
-    <!-- 上传 HTML -->
-    <form method="post" action="{% url 'resume_upload' %}" enctype="multipart/form-data" class="mb-3 upload-form">
-        {% csrf_token %}
-        <label class="form-label">上传 HTML 文件</label>
-        <input type="file" name="file" accept=".html,.htm" required class="form-control form-control-sm mb-2">
-        <button type="submit" class="btn btn-primary btn-sm">上传 HTML</button>
-    </form>
+    <!-- 右侧：编辑 -->
+    <div class="col-md-8">
+      <form id="resume-confirm-form">
+        <input type="hidden" name="resume_id" id="resume-id">
 
-    <!-- 上传 PDF -->
-    <form method="post" action="{% url 'resume_upload' %}" enctype="multipart/form-data" class="mb-3 upload-form">
-        {% csrf_token %}
-        <label class="form-label">上传 PDF 文件</label>
-        <input type="file" name="file" accept=".pdf" required class="form-control form-control-sm mb-2">
-        <button type="submit" class="btn btn-primary btn-sm">上传 PDF</button>
-    </form>
+        <div class="mb-2">
+          <label>姓名</label>
+          <input type="text" name="name" class="form-control form-control-sm">
+        </div>
+
+        <div class="mb-2">
+          <label>状态</label>
+          <select name="status" class="form-control form-control-sm">
+            <option>离职，正在找工作</option>
+            <option>在职，急寻新工作</option>
+            <option>在职，看看新机会</option>
+            <option>在职，暂无跳槽打算</option>
+          </select>
+        </div>
+
+        <div class="mb-2">
+          <label>电话号码</label>
+          <input type="text" name="phone" class="form-control form-control-sm">
+        </div>
+
+        <div class="mb-2">
+          <label>邮箱</label>
+          <input type="email" name="email" class="form-control form-control-sm">
+        </div>
+
+        <div class="mb-2">
+          <label>个人信息</label>
+          <textarea name="personal_info" class="form-control form-control-sm" rows="2"></textarea>
+        </div>
+
+        <div class="mb-2">
+          <label>期望岗位（逗号分隔）</label>
+          <input type="text" name="expected_positions" class="form-control form-control-sm">
+        </div>
+
+        <div class="mb-2">
+          <label>教育经历（JSON）</label>
+          <textarea name="education" class="form-control form-control-sm" rows="2"></textarea>
+        </div>
+
+        <div class="mb-2">
+          <label>证书</label>
+          <textarea name="certificates" class="form-control form-control-sm" rows="2"></textarea>
+        </div>
+
+        <div class="mb-2">
+          <label>技能（逗号分隔）</label>
+          <input type="text" name="skills" class="form-control form-control-sm">
+        </div>
+
+        <div class="mb-2">
+          <label>自我评价</label>
+          <textarea name="self_evaluation" class="form-control form-control-sm" rows="2"></textarea>
+        </div>
+
+        <div class="mb-2">
+          <label>项目经历（JSON）</label>
+          <textarea name="project_experiences" class="form-control form-control-sm" rows="2"></textarea>
+        </div>
+
+        <div class="mb-2">
+          <label>工作经历（JSON）</label>
+          <textarea name="working_experiences" class="form-control form-control-sm" rows="2"></textarea>
+        </div>
+
+        <div class="mb-2">
+          <label>标签（逗号分隔）</label>
+          <input type="text" name="tags" class="form-control form-control-sm">
+        </div>
+
+        <div class="mb-2">
+          <label>当前状态</label>
+          <select name="current_status" class="form-control form-control-sm">
+            <option>匹配中</option>
+            <option>面试中</option>
+          </select>
+        </div>
+
+        <button type="reset" class="btn btn-secondary btn-sm">清空</button>
+        <button type="submit" class="btn btn-success btn-sm">确认并保存简历</button>
+      </form>
+    </div>
+  </div>
 </section>
-
 {% endblock %}
 
 {% block extra_js %}
