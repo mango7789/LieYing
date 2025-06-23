@@ -20,7 +20,7 @@ class Parser:
 
     def parse(self, file_name: str):
         """处理目录中的所有HTML文件"""
-        self.logging.info(f"开始处理目录: {file_name}")
+        logging.info(f"开始处理目录: {file_name}")
         # all_data = []
 
         # 遍历目录中的所有HTML文件
@@ -53,49 +53,50 @@ class Parser:
                 html_content = f.read()
 
             # 使用BeautifulSoup解析HTML
-            soup = BeautifulSoup(html_content, "html.parser")
-
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
             # 提取简历ID
-            resume_id_elem = soup.select_one('div[class*="resume-detail-single"] span')
-            data_dict["resume_id"] = (
-                resume_id_elem.text.strip()[5:] if resume_id_elem else ""
-            )
-
+            resume_id_elem = soup.select_one('div[class*="BTVlw"] span')
+            data_dict["resume_id"] = resume_id_elem.text.strip()[5:] if resume_id_elem else ""
+            
             # 提取最后登录时间
-            last_login_elem = soup.select_one('span:contains("最后登录")')
-            data_dict["last_login"] = (
-                last_login_elem.text.strip()[9:] if last_login_elem else ""
-            )
-
+            last_login_elem = soup.select_one('span:contains("最后一次登录时间")')
+            data_dict["last_login"] = last_login_elem.text.strip()[9:] if last_login_elem else ""
+            
             # 提取状态
-            status_elem = soup.select_one("#resume-detail-basic-info div span")
+            status_elem = soup.select_one('span.user-status-tag')
             data_dict["status"] = status_elem.text.strip() if status_elem else ""
-
+            
             # 提取个人信息
             personal_info = []
-            info_elems = soup.select(
-                "#resume-detail-basic-info > div:nth-child(3) > div"
-            )
+            info_elems = soup.select('div.sep-info')
             for elem in info_elems:
-                if elem.find("span") and "text" in elem.span.attrs.get("class", []):
-                    personal_info.append(elem.text.strip())
+                strings = list(elem.stripped_strings)
+                filtered = [s for s in strings if s]
+                personal_info.append(" ".join(filtered))
             data_dict["information"] = " | ".join(personal_info)
-
+            
             # 提取求职意向
             job_intention = []
-            intention_elems = soup.select(
-                "#resume-detail-job-exp-info > div:nth-child(1) > div:nth-child(1) > span"
-            )
-            for elem in intention_elems:
-                job_intention.append(elem.text.strip())
-            data_dict["expectation"] = " | ".join(job_intention)
+            job_intention_div = soup.select_one('h3:contains("求职意向") + div.tabs')
+            if job_intention_div:
+                position = job_intention_div.select_one('span.title[title]')
+                location = job_intention_div.select_one('span.title:not([title])')
+                salary = job_intention_div.select_one('span.salary')
+                
+                if position and position.text.strip():
+                    job_intention.append(f"职位: {position.text.strip()}")
+                if location and location.text.strip():
+                    job_intention.append(f"地点: {location.text.strip()}")
+                if salary and salary.text.strip():
+                    job_intention.append(f"薪资: {salary.text.strip()}")
 
-            # 提取教育经历
-            education = []
-            edu_elems = soup.select(".edu-school-cont")
-            for elem in edu_elems:
-                education.append(elem.text.replace("\n", " ").strip())
-            data_dict["education"] = education
+            if not job_intention:
+                intention_elems = soup.select('#resume-detail-job-exp-info > div:nth-child(1) > div:nth-child(1) > span')
+                for elem in intention_elems:
+                    if elem.text.strip():
+                        job_intention.append(elem.text.strip())
+            data_dict["expectation"] = " | ".join(job_intention) if job_intention else "未提供求职意向"
 
             # 提取资格证书
             certificates = []
