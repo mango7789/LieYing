@@ -41,5 +41,10 @@ urlpatterns = [
     path(
         "resume/upload/page", resume_view.resume_upload_page, name="resume_upload_page"
     ),
-    path("resumes/<str:resume_id>/", resume_view.resume_detail, name="resume_detail"),
+    path(
+        "resume/detail/<str:resume_id>/",
+        resume_view.resume_detail,
+        name="resume_detail",
+    ),
+    path("resume/edit/<str:resume_id>/", resume_view.resume_edit, name="resume_edit"),
 ]

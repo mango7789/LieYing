@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .models import Resume, UploadRecord
+from .forms import ResumeForm
 from .constants import *
 from .parser import parse_html_file
 from core.utils.crypto import decrypt_params
@@ -46,6 +47,8 @@ def resume_list(request):
 
     if education != "不限" and education:
         qs = qs.filter(education__icontains=education)
+
+    # TODO: 根据 tags 进一步筛选
 
     if keyword:
         qs = qs.filter(
@@ -88,6 +91,7 @@ def resume_list(request):
     return render(request, "resumes/List.html", context)
 
 
+@login_required
 def resume_add():
     pass
 
@@ -159,8 +163,22 @@ def resume_upload(request):
         )
 
 
-def resume_modify():
-    pass
+@login_required
+def resume_edit(request, resume_id):
+    resume = get_object_or_404(Resume, pk=resume_id)
+
+    if request.method == "POST":
+        form = ResumeForm(request.POST, instance=resume)
+        if form.is_valid():
+            logging.debug("简历已成功修改")
+            form.save()
+            return redirect("resume_list")
+        else:
+            logging.warning("表单校验失败：%s", form.errors)
+    else:
+        form = ResumeForm(instance=resume)
+
+    return render(request, "resumes/Edit.html", {"form": form, "resume": resume})
 
 
 # TODO: 展示单独一份简历，可加入用户画像等功能

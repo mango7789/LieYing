@@ -4,7 +4,46 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("filter-form");
   const tableSection = document.querySelector("section.stats");
 
-  // 🔐 统一发加密请求
+    // 重置按钮逻辑
+  const resetBtn = document.getElementById("reset-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      // // 清空关键词
+      // form.querySelector("input[name='keyword']").value = "";
+
+      document.getElementById("city-input").value = "";
+      document.querySelectorAll(".city-btn").forEach((btn, idx) => {
+        btn.classList.replace("btn-primary", "btn-outline-primary");
+        if (idx === 0) {
+          btn.classList.replace("btn-outline-primary", "btn-primary");
+          document.getElementById("city-input").value = btn.dataset.value;
+        }
+      });
+
+      document.getElementById("education-input").value = "";
+      document.querySelectorAll(".edu-btn").forEach((btn, idx) => {
+        btn.classList.replace("btn-primary", "btn-outline-primary");
+        if (idx === 0) {
+          btn.classList.replace("btn-outline-primary", "btn-primary");
+          document.getElementById("education-input").value = btn.dataset.value;
+        }
+      });
+
+      document.getElementById("workyears-input").value = "";
+      document.querySelectorAll(".workyears-btn").forEach((btn, idx) => {
+        btn.classList.replace("btn-primary", "btn-outline-primary");
+        if (idx === 0) {
+          btn.classList.replace("btn-outline-primary", "btn-primary");
+          document.getElementById("workyears-input").value = btn.dataset.value;
+        }
+      });
+
+      fetchFilteredResumes();
+    });
+  }
+
+
+  // 统一发加密请求
   async function fetchFilteredResumes(page = 1) {
     const data = {
       keyword: form.querySelector("input[name='keyword']").value.trim(),
