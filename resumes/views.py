@@ -1,16 +1,19 @@
+import logging
 from django.db.models import Q
 from django.contrib import messages
 from django.http import JsonResponse
+from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import Resume
+
+from .models import Resume, UploadRecord
 from .constants import *
+from .parser import parse_html_file
+
 
 # Create your views here.
-
-
 @login_required
 def resume_list(request):
     qs = Resume.objects.all()
@@ -39,6 +42,7 @@ def resume_list(request):
             | Q(working_experiences__icontains=keyword)
         )
 
+    # 分页
     paginator = Paginator(qs, 10)
     page_number = request.GET.get("page", 1)
     try:
@@ -47,6 +51,8 @@ def resume_list(request):
         page_obj = paginator.page(1)
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
+
+    # TODO: 给简历添加标签
 
     context = {
         "resumes": page_obj.object_list,
@@ -59,11 +65,22 @@ def resume_list(request):
         "selected_working_y": work_years,
         "filter_keyword": keyword,
     }
+
+    # Ajax 异步更新简历表格
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        html = render_to_string("resumes/Table.html", context, request=request)
+        return JsonResponse({"html": html})
+
     return render(request, "resumes/List.html", context)
 
 
 def resume_add():
     pass
+
+
+@login_required
+def resume_upload_page(request):
+    return render(request, "resumes/Upload.html")
 
 
 @login_required
@@ -85,21 +102,41 @@ def resume_upload(request):
 
     filename = uploaded_file.name
 
-    if filename.endswith(".xls") or filename.endswith(".xlsx"):
-        msg = f"{filename} 上传成功！"
-    elif filename.endswith(".html") or filename.endswith(".htm"):
-        msg = f"{filename} 上传成功！"
-    elif filename.endswith(".pdf"):
-        msg = f"{filename} 上传成功！"
-    else:
+    if not filename.lower().endswith(ALLOWED_EXTENSIONS):
         return JsonResponse(
             {
                 "success": False,
                 "message": "不支持的文件类型。请上传 Excel、HTML 或 PDF 文件。",
             }
         )
+    upload_record = UploadRecord.objects.create(
+        user=request.user,
+        filename=filename,
+        parse_status="fail",
+        resume=None,
+    )
 
-    return JsonResponse({"success": True, "message": msg})
+    try:
+        resume_id, resume_data = "demo123456", {}
+        resume_obj, created = Resume.objects.get_or_create(resume_id=resume_id)
+
+        # 覆盖原简历字段
+        for field, value in resume_data.items():
+            setattr(resume_obj, field, value)
+        resume_obj.save()
+
+        upload_record.parse_status = "success"
+        upload_record.resume = resume_obj
+        upload_record.save()
+
+        return JsonResponse(
+            {"success": True, "message": f"{filename} 上传成功且解析完成！"}
+        )
+    except Exception as e:
+        # 解析失败
+        return JsonResponse(
+            {"success": False, "message": f"{filename} 上传成功，但解析失败: {str(e)}"}
+        )
 
 
 def resume_modify():

@@ -14,11 +14,21 @@
             <div class="flex-grow-1 d-flex justify-content-center">
                 <ul class="nav">
                     <li class="nav-item">
-                        <a href="#" class="nav-link {% if request.path|first_path_segment == 'home' %}active{% endif %}">首页</a>
+                        <a href="{% url 'home' %}" class="nav-link {% if request.path|first_path_segment == 'home' %}active{% endif %}">首页</a>
                     </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link {% if request.path|first_path_segment == 'resume' %}active{% endif %}">人才库</a>
+                    <li class="nav-item dropdown">
+                        <a href="{% url 'resume_list' %}" 
+                        class="nav-link {% if request.path|first_path_segment == 'resume' %}active{% endif %}" 
+                        id="resumeDropdown" 
+                        role="button">
+                            人才库
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="resumeDropdown">
+                            <li><a class="dropdown-item" href="{% url 'resume_list' %}">简历列表</a></li>
+                            <li><a class="dropdown-item" href="{% url 'resume_upload_page' %}">上传简历</a></li>
+                        </ul>
                     </li>
+
                     <li class="nav-item">
                         <a href="#" class="nav-link {% if request.path|first_path_segment == 'job' %}active{% endif %}">岗位库</a>
                     </li>
@@ -44,3 +54,59 @@
         </nav>
     </div>
 </header>
+
+<style>
+/* 让悬浮显示下拉菜单 */
+.nav-item.dropdown .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    min-width: 160px;
+    padding: 0.5rem 0;
+    font-size: 0.95rem;
+    color: var(--dark-text);
+    background-color: var(--card-bg);
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* 样式不变：item 样式 */
+.dropdown-menu .dropdown-item {
+    padding: 10px 16px;
+    font-weight: 500;
+    color: var(--dark-text);
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dropdown-menu .dropdown-item:hover {
+    background-color: #f1f1f1;
+    color: var(--primary-color);
+}
+
+
+</style>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const dropdown = document.querySelector(".nav-item.dropdown");
+    const dropdownMenu = dropdown.querySelector(".dropdown-menu");
+
+    let hideTimeout = null;
+
+    dropdown.addEventListener("mouseenter", () => {
+        clearTimeout(hideTimeout);
+        dropdownMenu.style.display = "block";
+    });
+
+    dropdown.addEventListener("mouseleave", () => {
+        hideTimeout = setTimeout(() => {
+            dropdownMenu.style.display = "none";
+        }, 500);
+    });
+});
+</script>

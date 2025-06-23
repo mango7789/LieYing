@@ -8,6 +8,20 @@ from bs4 import BeautifulSoup
 from typing import Dict, Final
 
 
+class Parser:
+    def __init__(self):
+        pass
+
+    def parse():
+        pass
+
+    def _parse_html():
+        pass
+
+    def _parse_pdf():
+        pass
+
+
 def parse_html_file(html_path: str) -> Dict:
     """解析本地HTML文件并提取简历数据"""
     logging.info(f"开始解析HTML文件: {html_path}")

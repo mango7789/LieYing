@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Resume(models.Model):
@@ -35,3 +36,30 @@ class Resume(models.Model):
     class Meta:
         verbose_name = "简历"
         verbose_name_plural = "简历"
+
+
+class UploadRecord(models.Model):
+    PARSE_STATUS_CHOICES = (
+        ("success", "解析成功"),
+        ("fail", "解析失败"),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    filename = models.CharField(max_length=255)
+    upload_time = models.DateTimeField(auto_now_add=True)
+    parse_status = models.CharField(
+        max_length=10,
+        choices=PARSE_STATUS_CHOICES,
+        default="fail",
+        verbose_name="解析状态",
+    )
+    resume = models.ForeignKey(
+        Resume,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name="关联简历",
+    )
+
+    def __str__(self):
+        return f"{self.user.username} 上传了 {self.filename} 于 {self.upload_time}，状态：{self.get_parse_status_display()}"

@@ -13,3 +13,7 @@ def logout():
 
 def register():
     pass
+
+
+def home(request):
+    return render(request, "crawls/Main.html")
