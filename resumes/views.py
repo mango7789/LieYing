@@ -1,7 +1,10 @@
-import logging
+import os, logging
 from django.db.models import Q
 from django.contrib import messages
 from django.http import JsonResponse
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
@@ -9,19 +12,35 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .models import Resume, UploadRecord
+from .forms import ResumeForm
 from .constants import *
-from .parser import parse_html_file
+from .parser import Parser
+from core.utils.crypto import decrypt_params
 
+resume_parser = Parser()
 
 # Create your views here.
 @login_required
 def resume_list(request):
-    qs = Resume.objects.all()
+    q = request.GET.get("q")
+    if q:
+        try:
+            params = decrypt_params(q)
+        except Exception:
+            return JsonResponse({"error": "参数解密失败"})
+    else:
+        params = {
+            "city": request.GET.get("city", "不限").strip(),
+            "work_years": request.GET.get("work_years", "不限").strip(),
+            "education": request.GET.get("education", "不限").strip(),
+            "keyword": request.GET.get("keyword", "").strip(),
+        }
 
-    city = request.GET.get("city", "不限").strip()
-    work_years = request.GET.get("work_years", "不限").strip()
-    education = request.GET.get("education", "不限").strip()
-    keyword = request.GET.get("keyword", "").strip()
+    qs = Resume.objects.all()
+    city = params["city"]
+    work_years = params["work_years"]
+    education = params["education"]
+    keyword = params["keyword"]
 
     # 仅当选项不是“不限”时才过滤
     if city != "不限" and city:
@@ -32,6 +51,8 @@ def resume_list(request):
 
     if education != "不限" and education:
         qs = qs.filter(education__icontains=education)
+
+    # TODO: 根据 tags 进一步筛选
 
     if keyword:
         qs = qs.filter(
@@ -74,6 +95,7 @@ def resume_list(request):
     return render(request, "resumes/List.html", context)
 
 
+@login_required
 def resume_add():
     pass
 
@@ -81,6 +103,12 @@ def resume_add():
 @login_required
 def resume_upload_page(request):
     return render(request, "resumes/Upload.html")
+
+
+# TODO: 简历上传记录
+@login_required
+def resume_upload_list(request):
+    pass
 
 
 @login_required
@@ -109,6 +137,15 @@ def resume_upload(request):
                 "message": "不支持的文件类型。请上传 Excel、HTML 或 PDF 文件。",
             }
         )
+        
+    local_path = os.path.join(UPLOAD_FOLDER, filename)
+    full_path = os.path.join(settings.MEDIA_ROOT, local_path)
+
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    with open(full_path, "wb+") as destination:
+        for chunk in uploaded_file.chunks():
+            destination.write(chunk)
+
     upload_record = UploadRecord.objects.create(
         user=request.user,
         filename=filename,
@@ -117,6 +154,7 @@ def resume_upload(request):
     )
 
     try:
+
         (
             resume_id,
             name,
@@ -149,6 +187,7 @@ def resume_upload(request):
             working_experiences=working_experiences,
         )
 
+
         # 覆盖原简历字段
         for field, value in resume_data.items():
             setattr(resume_obj, field, value)
@@ -168,8 +207,22 @@ def resume_upload(request):
         )
 
 
-def resume_modify():
-    pass
+@login_required
+def resume_edit(request, resume_id):
+    resume = get_object_or_404(Resume, pk=resume_id)
+
+    if request.method == "POST":
+        form = ResumeForm(request.POST, instance=resume)
+        if form.is_valid():
+            logging.debug("简历已成功修改")
+            form.save()
+            return redirect("resume_list")
+        else:
+            logging.warning("表单校验失败：%s", form.errors)
+    else:
+        form = ResumeForm(instance=resume)
+
+    return render(request, "resumes/Edit.html", {"form": form, "resume": resume})
 
 
 # TODO: 展示单独一份简历，可加入用户画像等功能

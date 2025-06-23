@@ -3,14 +3,23 @@ from django.contrib.auth.models import User
 
 
 class Resume(models.Model):
+    STATUS_CHOICES = [
+        ("离职，正在找工作", "离职，正在找工作"),
+        ("在职，急寻新工作", "在职，急寻新工作"),
+        ("在职，看看新机会", "在职，看看新机会"),
+        ("在职，暂无跳槽打算", "在职，暂无跳槽打算"),
+    ]
+
     resume_id = models.CharField("简历编号", max_length=32, primary_key=True)
     created_at = models.DateTimeField("创建时间", auto_now_add=True)
     updated_at = models.DateTimeField("更新时间", auto_now=True)
 
     # 主要信息
     name = models.CharField("姓名", max_length=10)
-    status = models.CharField("状态", max_length=10)  # TODO: 把状态改为 CHOICES
-    personal_info = models.TextField("个人信息")
+    status = models.CharField(
+        "状态", max_length=20, choices=STATUS_CHOICES, default="在职，看看新机会"
+    )
+    personal_info = models.TextField("个人信息", blank=True)
     phone = models.CharField("电话号码", max_length=11, blank=True)
     email = models.EmailField("邮箱", blank=True)
 
@@ -25,6 +34,7 @@ class Resume(models.Model):
     project_experiences = models.JSONField("项目经历", default=list, blank=True)
     working_experiences = models.JSONField("工作经历", default=list, blank=True)
 
+    # HH 需求
     current_status = models.CharField(
         "当前状态",
         max_length=20,
@@ -32,6 +42,8 @@ class Resume(models.Model):
         default="匹配中",
     )
     tags = models.JSONField("标签", default=list, blank=True)
+    # TODO: 标注简历来源
+    # source = models.CharField("来源", blank=True, default="猎聘")
 
     class Meta:
         verbose_name = "简历"
@@ -63,3 +75,7 @@ class UploadRecord(models.Model):
 
     def __str__(self):
         return f"{self.user.username} 上传了 {self.filename} 于 {self.upload_time}，状态：{self.get_parse_status_display()}"
+
+    class Meta:
+        verbose_name = "简历上传记录"
+        verbose_name_plural = "简历上传记录"

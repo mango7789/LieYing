@@ -434,3 +434,9 @@ footer
     margin-bottom: 8px;
     color: var(--dark-text);
 }
+
+.btn-small-custom {
+  padding: 0.15rem 0.3rem !important;
+  font-size: 1rem !important;
+  line-height: 2 !important;
+}

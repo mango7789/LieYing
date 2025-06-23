@@ -4,27 +4,83 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("filter-form");
   const tableSection = document.querySelector("section.stats");
 
-  function fetchFilteredResumes(extraParams = "") {
-    // console.log("正在发送 AJAX 请求...");
-    const formData = new FormData(form);
-    const params = new URLSearchParams(formData).toString();
-    const query = params + (extraParams ? "&" + extraParams : "");
+    // 重置按钮逻辑
+  const resetBtn = document.getElementById("reset-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      // // 清空关键词
+      // form.querySelector("input[name='keyword']").value = "";
 
-    window.history.pushState({}, '', `${window.location.pathname}?${query}`);
-
-    fetch(`${window.location.pathname}?${query}`, {
-      headers: {
-        "X-Requested-With": "XMLHttpRequest"
-      }
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        tableSection.innerHTML = data.html;
-        bindPagination();
-      })
-      .catch(() => {
-        tableSection.innerHTML = "<p>加载失败，请重试。</p>";
+      document.getElementById("city-input").value = "";
+      document.querySelectorAll(".city-btn").forEach((btn, idx) => {
+        btn.classList.replace("btn-primary", "btn-outline-primary");
+        if (idx === 0) {
+          btn.classList.replace("btn-outline-primary", "btn-primary");
+          document.getElementById("city-input").value = btn.dataset.value;
+        }
       });
+
+      document.getElementById("education-input").value = "";
+      document.querySelectorAll(".edu-btn").forEach((btn, idx) => {
+        btn.classList.replace("btn-primary", "btn-outline-primary");
+        if (idx === 0) {
+          btn.classList.replace("btn-outline-primary", "btn-primary");
+          document.getElementById("education-input").value = btn.dataset.value;
+        }
+      });
+
+      document.getElementById("workyears-input").value = "";
+      document.querySelectorAll(".workyears-btn").forEach((btn, idx) => {
+        btn.classList.replace("btn-primary", "btn-outline-primary");
+        if (idx === 0) {
+          btn.classList.replace("btn-outline-primary", "btn-primary");
+          document.getElementById("workyears-input").value = btn.dataset.value;
+        }
+      });
+
+      fetchFilteredResumes();
+    });
+  }
+
+
+  // 统一发加密请求
+  async function fetchFilteredResumes(page = 1) {
+    const data = {
+      keyword: form.querySelector("input[name='keyword']").value.trim(),
+      city: document.getElementById("city-input").value.trim(),
+      education: document.getElementById("education-input").value.trim(),
+      work_years: document.getElementById("workyears-input").value.trim(),
+    };
+    // console.log(data);
+    try {
+      const res = await fetch("/encrypt/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify(data),
+      });
+
+      const json = await res.json();
+      if (!json.q) throw new Error("加密失败");
+
+      const url = `${window.location.pathname}?q=${encodeURIComponent(json.q)}&page=${page}`;
+      window.history.pushState({}, '', url);
+
+      const htmlRes = await fetch(url, {
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      });
+      const htmlJson = await htmlRes.json();
+      tableSection.innerHTML = htmlJson.html;
+      bindPagination();
+
+    } catch (err) {
+      console.error("加载失败", err);
+      tableSection.innerHTML = "<p>加载失败，请重试。</p>";
+    }
   }
 
   function bindPagination() {
@@ -32,24 +88,18 @@ document.addEventListener("DOMContentLoaded", () => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
         const url = new URL(link.href);
-        const page = url.searchParams.get("page");
-        fetchFilteredResumes("page=" + page);
+        const page = url.searchParams.get("page") || 1;
+        fetchFilteredResumes(page);
       });
     });
   }
 
-  // 城市筛选
+  // 城市筛选按钮绑定
   document.querySelectorAll(".city-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.getElementById("city-input").value = btn.dataset.value;
-
-      document.querySelectorAll(".city-btn").forEach((b) => {
-        b.classList.remove("btn-primary");
-        b.classList.add("btn-outline-primary");
-      });
-      btn.classList.add("btn-primary");
-      btn.classList.remove("btn-outline-primary");
-
+      document.querySelectorAll(".city-btn").forEach((b) => b.classList.replace("btn-primary", "btn-outline-primary"));
+      btn.classList.replace("btn-outline-primary", "btn-primary");
       fetchFilteredResumes();
     });
   });
@@ -58,14 +108,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".edu-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.getElementById("education-input").value = btn.dataset.value;
-
-      document.querySelectorAll(".edu-btn").forEach((b) => {
-        b.classList.remove("btn-primary");
-        b.classList.add("btn-outline-primary");
-      });
-      btn.classList.add("btn-primary");
-      btn.classList.remove("btn-outline-primary");
-
+      document.querySelectorAll(".edu-btn").forEach((b) => b.classList.replace("btn-primary", "btn-outline-primary"));
+      btn.classList.replace("btn-outline-primary", "btn-primary");
       fetchFilteredResumes();
     });
   });
@@ -74,19 +118,13 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".workyears-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.getElementById("workyears-input").value = btn.dataset.value;
-
-      document.querySelectorAll(".workyears-btn").forEach((b) => {
-        b.classList.remove("btn-primary");
-        b.classList.add("btn-outline-primary");
-      });
-      btn.classList.add("btn-primary");
-      btn.classList.remove("btn-outline-primary");
-
+      document.querySelectorAll(".workyears-btn").forEach((b) => b.classList.replace("btn-primary", "btn-outline-primary"));
+      btn.classList.replace("btn-outline-primary", "btn-primary");
       fetchFilteredResumes();
     });
   });
 
-  // 搜索框支持回车查询
+  // 关键词搜索
   form.querySelector("input[name='keyword']").addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -94,6 +132,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 初始分页绑定
   bindPagination();
 });
+
+// 获取 CSRF Token
+function getCookie(name) {
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(name + "="));
+  return cookieValue ? decodeURIComponent(cookieValue.split("=")[1]) : "";
+}

@@ -1,3 +1,4 @@
+
 import os
 import sys
 import time
@@ -468,3 +469,4 @@ class Parser:
             ]
 
         return section_contents
+

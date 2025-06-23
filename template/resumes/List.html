@@ -20,6 +20,14 @@
       >
     </div>
 
+	<!-- 重置按钮 -->
+	<div class="mb-3 text-start">
+	<button type="button" class="btn btn-outline-secondary btn-sm" id="reset-btn">
+		🔄 重置筛选
+	</button>
+	</div>
+
+
     <!-- 城市 -->
     <div class="mb-3 text-start" role="group" aria-label="城市筛选">
       <label class="form-label">城市</label>
@@ -38,7 +46,7 @@
 
     <!-- 教育 -->
     <div class="mb-3 text-start" role="group" aria-label="教育筛选">
-      <label class="form-label">教育</label>
+      <label class="form-label">教育背景</label>
       <div class="btn-group" role="group">
         {% for edu in education_choices %}
           <button
@@ -54,7 +62,7 @@
 
     <!-- 年限 -->
     <div class="mb-3 text-start" role="group" aria-label="工作年限筛选">
-      <label class="form-label">年限</label>
+      <label class="form-label">工作年限</label>
       <div class="btn-group" role="group">
         {% for wy in working_years_choices %}
           <button
