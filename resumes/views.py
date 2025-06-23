@@ -19,6 +19,7 @@ from core.utils.crypto import decrypt_params
 
 resume_parser = Parser()
 
+
 # Create your views here.
 @login_required
 def resume_list(request):
@@ -36,7 +37,7 @@ def resume_list(request):
             "keyword": request.GET.get("keyword", "").strip(),
         }
 
-    qs = Resume.objects.all()
+    qs = Resume.objects.exclude(resume_id__isnull=True).exclude(resume_id="")
     city = params["city"]
     work_years = params["work_years"]
     education = params["education"]
@@ -137,7 +138,7 @@ def resume_upload(request):
                 "message": "不支持的文件类型。请上传 Excel、HTML 或 PDF 文件。",
             }
         )
-        
+
     local_path = os.path.join(UPLOAD_FOLDER, filename)
     full_path = os.path.join(settings.MEDIA_ROOT, local_path)
 
@@ -153,45 +154,21 @@ def resume_upload(request):
         resume=None,
     )
 
+    # TODO: 简历解析后需要 HH 确认并保存
     try:
+        resume_id, resume_dict = resume_parser.parse(full_path)
 
-        (
-            resume_id,
-            name,
-            status,
-            personal_info,
-            phone,
-            email,
-            expected_positions,
-            education,
-            certificates,
-            skills,
-            self_evaluation,
-            project_experiences,
-            working_experiences,
-            resume_data,
-        ) = ("demo123456", {})
+        logging.debug(f"解析结果：{resume_dict}")
+
         resume_obj, created = Resume.objects.get_or_create(
-            resume_id=resume_id,
-            name=name,
-            status=status,
-            personal_info=personal_info,
-            phone=phone,
-            email=email,
-            expected_positions=expected_positions,
-            education=education,
-            certificates=certificates,
-            skills=skills,
-            self_evaluation=self_evaluation,
-            project_experiences=project_experiences,
-            working_experiences=working_experiences,
+            resume_id=resume_id, defaults=resume_dict
         )
 
-
         # 覆盖原简历字段
-        for field, value in resume_data.items():
-            setattr(resume_obj, field, value)
-        resume_obj.save()
+        if not created:
+            for field, value in resume_dict.items():
+                setattr(resume_obj, field, value)
+            resume_obj.save()
 
         upload_record.parse_status = "success"
         upload_record.resume = resume_obj

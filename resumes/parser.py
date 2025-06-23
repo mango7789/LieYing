@@ -1,4 +1,3 @@
-
 import os
 import sys
 import time
@@ -9,37 +8,28 @@ import re
 from bs4 import BeautifulSoup
 from typing import Dict, Final
 import fitz
-
+from .models import Resume
 
 class Parser:
     def __init__(self):
-        input_directory = "./upload"  # 存放HTML文件的目录
-        output_json = "./output/resumes.json"  # 输出JSON文件路径
-
-        self.parse(input_directory, output_json)
+        pass
 
     def parse(self, file_name: str):
         """处理目录中的所有HTML文件"""
-        logging.info(f"开始处理目录: {file_name}")
-        # all_data = []
+        logging.info(f"开始处理文件: {file_name}")
 
-        # 遍历目录中的所有HTML文件
-        # for filename in os.listdir/(input_dir):
         if file_name.endswith(".html"):
-            # html_path = os.path.join(input_dir, file_name)
             data = self._parse_html(file_name)
-            # if data:
-            #     all_data.append(data)
         elif file_name.lower().endswith(".pdf"):
-            # pdf_path = os.path.join(input_dir, file_name)
             data = self._parse_pdf(file_name)
-            # if data:
-            # all_data.append(data)
 
         if data and isinstance(data, dict):
-            data["resume_id"] = resume_id
-        # 保存结果到JSON文件
-        self.logging.info(f"文件解析完成: {resume_id}")
+            resume_id = data["resume_id"]
+
+        logging.info(f"文件解析完成: {resume_id}")
+        
+        data = self._clean_dict(data)
+        
         return resume_id, data
 
     def _parse_html(self, html_path: str) -> Dict:
@@ -74,7 +64,7 @@ class Parser:
                 strings = list(elem.stripped_strings)
                 filtered = [s for s in strings if s]
                 personal_info.append(" ".join(filtered))
-            data_dict["information"] = " | ".join(personal_info)
+            data_dict["personal_info"] = " | ".join(personal_info)
             
             # 提取求职意向
             job_intention = []
@@ -96,7 +86,7 @@ class Parser:
                 for elem in intention_elems:
                     if elem.text.strip():
                         job_intention.append(elem.text.strip())
-            data_dict["expectation"] = " | ".join(job_intention) if job_intention else "未提供求职意向"
+            data_dict["expected_positions"] = " | ".join(job_intention) if job_intention else "未提供求职意向"
 
             # 提取资格证书
             certificates = []
@@ -128,7 +118,7 @@ class Parser:
 
             # 提取自我评价
             self_eval_elem = soup.select_one("#resume-detail-self-eva-info > div > div")
-            data_dict["self_assessment"] = (
+            data_dict["self_evaluation"] = (
                 self_eval_elem.text.strip() if self_eval_elem else ""
             )
 
@@ -170,7 +160,7 @@ class Parser:
                             work_data[title] = content
 
                 work_experience.append(work_data)
-            data_dict["work_experience"] = work_experience
+            data_dict["working_experiences"] = work_experience
 
             # 提取项目经历
             project_experience = []
@@ -205,7 +195,7 @@ class Parser:
                             project_data[title] = content
 
                 project_experience.append(project_data)
-            data_dict["project_experience"] = project_experience
+            data_dict["project_experiences"] = project_experience
 
             logging.info(f"成功解析HTML文件: {html_path}")
             return data_dict
@@ -471,3 +461,7 @@ class Parser:
 
         return section_contents
 
+    def _clean_dict(self, data: Dict) -> Dict:
+        model_fields = set(f.name for f in Resume._meta.get_fields())
+        clean_dict = {k: v for k, v in data.items() if k in model_fields}
+        return clean_dict
