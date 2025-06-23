@@ -63,3 +63,7 @@ class UploadRecord(models.Model):
 
     def __str__(self):
         return f"{self.user.username} 上传了 {self.filename} 于 {self.upload_time}，状态：{self.get_parse_status_display()}"
+
+    class Meta:
+        verbose_name = "简历上传记录"
+        verbose_name_plural = "简历上传记录"

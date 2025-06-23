@@ -11,17 +11,31 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Resume, UploadRecord
 from .constants import *
 from .parser import parse_html_file
+from core.utils.crypto import decrypt_params
 
 
 # Create your views here.
 @login_required
 def resume_list(request):
-    qs = Resume.objects.all()
+    q = request.GET.get("q")
+    if q:
+        try:
+            params = decrypt_params(q)
+        except Exception:
+            return JsonResponse({"error": "参数解密失败"})
+    else:
+        params = {
+            "city": request.GET.get("city", "不限").strip(),
+            "work_years": request.GET.get("work_years", "不限").strip(),
+            "education": request.GET.get("education", "不限").strip(),
+            "keyword": request.GET.get("keyword", "").strip(),
+        }
 
-    city = request.GET.get("city", "不限").strip()
-    work_years = request.GET.get("work_years", "不限").strip()
-    education = request.GET.get("education", "不限").strip()
-    keyword = request.GET.get("keyword", "").strip()
+    qs = Resume.objects.all()
+    city = params["city"]
+    work_years = params["work_years"]
+    education = params["education"]
+    keyword = params["keyword"]
 
     # 仅当选项不是“不限”时才过滤
     if city != "不限" and city:
@@ -81,6 +95,12 @@ def resume_add():
 @login_required
 def resume_upload_page(request):
     return render(request, "resumes/Upload.html")
+
+
+# TODO: 简历上传记录
+@login_required
+def resume_upload_list(request):
+    pass
 
 
 @login_required
