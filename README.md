@@ -10,6 +10,10 @@
   python manage.py makemigrations
   python manage.py migrate
   ```
+- 导入测试数据
+  ```bash
+  mysql -u root -p < lieying.sql
+  ```
 - 启动 app
   ```bash
   python manage.py runserver
