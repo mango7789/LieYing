@@ -164,3 +164,6 @@ LOGGING = {
 # Media
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# user-password for login remember time
+REMEMBER_ME_SECONDS = 60 * 60 * 24 * 14
