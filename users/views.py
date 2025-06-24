@@ -32,7 +32,7 @@ def custom_login_view(request):
         else:
             messages.error(request, "用户名或密码错误")
 
-    return render(request, "crawls/User_Login.html")
+    return render(request, "users/User_Login.html")
 
 
 def custom_logout_view(request):
@@ -48,8 +48,8 @@ def custom_register_view(request):
             user = form.save()
             login(request, user)
             return redirect("home")
-    return render(request, "crawls/User_register.html", {"form": form})
+    return render(request, "users/User_register.html", {"form": form})
 
 
 def home_view(request):
-    return render(request, "crawls/Main.html")
+    return render(request, "users/Main.html")
