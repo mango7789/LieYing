@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core",
-    "users",
+    "users.apps.UsersConfig",
     "resumes",
     "jobs",
 ]
@@ -143,7 +143,8 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Handle login and logput
-LOGIN_REDIRECT_URL = "/home/"
+LOGIN_URL = "/login/"
+# LOGIN_REDIRECT_URL = "/home/"
 LOGOUT_REDIRECT_URL = "/login/"
 
 # Logger

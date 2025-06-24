@@ -28,7 +28,11 @@ def custom_login_view(request):
                 request.session.set_expiry(0)
             login(request, user)
             messages.success(request, "登录成功！")
-            return redirect("home")
+            next_url = request.GET.get("next")
+            if next_url:
+                return redirect(next_url)
+            else:
+                return redirect("home")
         else:
             messages.error(request, "用户名或密码错误")
 

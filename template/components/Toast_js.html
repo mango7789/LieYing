@@ -1,12 +1,41 @@
 {% if messages %}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const toastEl = document.getElementById('message-toast');
-    const toastBody = toastEl.querySelector('.toast-body');
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.top = '50%';
+    container.style.left = '50%';
+    container.style.transform = 'translate(-50%, -50%)';
+    container.style.zIndex = 1055;
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.gap = '0.5rem';
+    container.style.alignItems = 'center';
+
+    document.body.appendChild(container);
 
     {% for message in messages %}
-      toastBody.textContent = "{{ message|escapejs }}";
-      const toast = new bootstrap.Toast(toastEl);
+      const toastEl = document.createElement('div');
+      toastEl.className = 'toast align-items-center bg-white text-dark border-0 shadow';
+      toastEl.setAttribute('role', 'alert');
+      toastEl.setAttribute('aria-live', 'assertive');
+      toastEl.setAttribute('aria-atomic', 'true');
+
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            {{ message|escapejs }}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+
+      container.appendChild(toastEl);
+
+      const toast = new bootstrap.Toast(toastEl, {
+        autohide: true,
+        delay: 1000
+      });
       toast.show();
     {% endfor %}
   });
