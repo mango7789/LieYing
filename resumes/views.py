@@ -114,6 +114,11 @@ def resume_upload_list(request):
 
     records = UploadRecord.objects.filter(user=request.user)
 
+    if request.user.is_staff or request.user.is_superuser:
+        records = UploadRecord.objects.all()
+    else:
+        records = UploadRecord.objects.filter(user=request.user)
+
     if query:
         records = records.filter(filename__icontains=query)
 
@@ -200,6 +205,8 @@ def resume_upload(request):
 
     except Exception as e:
         # 解析失败
+        upload_record.error_message = str(e)
+        upload_record.save()
         if settings.DEBUG:
             return JsonResponse(
                 {
