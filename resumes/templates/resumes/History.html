@@ -23,18 +23,31 @@
 
 
   {% if page_obj.object_list %}
+    <div class="text-center mb-2 ms-1">
+      <strong>
+        显示第 {{ page_obj.start_index }} - {{ page_obj.end_index }} 条，共 {{ page_obj.paginator.count }} 条简历记录
+      </strong>
+    </div>
     <table class="table table-bordered table-hover">
       <thead class="table-light">
         <tr>
+          <th>简历编号</th>
           <th>文件名</th>
           <th>上传时间</th>
           <th>解析状态</th>
-          <th>简历编号</th>
+          <th>错误信息</th>
         </tr>
       </thead>
       <tbody>
         {% for record in page_obj.object_list %}
           <tr>
+            <td>
+              {% if record.resume %}
+                <a href="{% url 'resume_edit' record.resume.resume_id %}">{{ record.resume.resume_id }}</a>
+              {% else %}
+                
+              {% endif %}
+            </td>
             <td>{{ record.filename }}</td>
             <td>{{ record.upload_time|date:"Y-m-d H:i:s" }}</td>
             <td>
@@ -45,10 +58,10 @@
               {% endif %}
             </td>
             <td>
-              {% if record.resume %}
-                <a href="{% url 'resume_edit' record.resume.resume_id %}">{{ record.resume.resume_id }}</a>
+              {% if record.error_message %}
+                <{{ record.error_message }}</a>
               {% else %}
-                —
+                
               {% endif %}
             </td>
           </tr>
