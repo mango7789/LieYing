@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "Layout.html" %}
 {% block content %}
 <div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
     <div class="card shadow p-4" style="max-width: 420px; width: 100%;">
@@ -17,6 +17,9 @@
                 <label for="id_password" class="form-label">密码</label>
                 <input type="password" name="password" id="id_password" class="form-control" required>
             </div>
+            <label>
+                <input type="checkbox" name="remember_me" checked> 记住我
+            </label>
             {% if form.errors %}
             <div class="alert alert-danger text-center py-2">
                 用户名或密码错误，请重试。
@@ -32,3 +35,6 @@
     </div>
 </div>
 {% endblock %}
+<!-- {% block extra_js %}
+{% include "components/Toast_js.html" %}
+{% endblock %} -->

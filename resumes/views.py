@@ -1,7 +1,10 @@
-import logging
+import os, json, logging
 from django.db.models import Q
 from django.contrib import messages
 from django.http import JsonResponse
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
@@ -9,9 +12,12 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .models import Resume, UploadRecord
+from .forms import ResumeForm
 from .constants import *
-from .parser import parse_html_file
+from .parser import Parser
 from core.utils.crypto import decrypt_params
+
+resume_parser = Parser()
 
 
 # Create your views here.
@@ -31,7 +37,7 @@ def resume_list(request):
             "keyword": request.GET.get("keyword", "").strip(),
         }
 
-    qs = Resume.objects.all()
+    qs = Resume.objects.exclude(resume_id__isnull=True).exclude(resume_id="")
     city = params["city"]
     work_years = params["work_years"]
     education = params["education"]
@@ -46,6 +52,8 @@ def resume_list(request):
 
     if education != "不限" and education:
         qs = qs.filter(education__icontains=education)
+
+    # TODO: 根据 tags 进一步筛选
 
     if keyword:
         qs = qs.filter(
@@ -88,6 +96,7 @@ def resume_list(request):
     return render(request, "resumes/List.html", context)
 
 
+@login_required
 def resume_add():
     pass
 
@@ -100,7 +109,29 @@ def resume_upload_page(request):
 # TODO: 简历上传记录
 @login_required
 def resume_upload_list(request):
-    pass
+    query = request.GET.get("q", "")
+    page_number = request.GET.get("page", 1)
+
+    records = UploadRecord.objects.filter(user=request.user)
+
+    if request.user.is_staff or request.user.is_superuser:
+        records = UploadRecord.objects.all()
+    else:
+        records = UploadRecord.objects.filter(user=request.user)
+
+    if query:
+        records = records.filter(filename__icontains=query)
+
+    records = records.order_by("-upload_time")
+
+    paginator = Paginator(records, 10)  # 每页显示 10 条记录
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "resumes/History.html",
+        {"page_obj": page_obj, "query": query}
+    )
 
 
 @login_required
@@ -129,6 +160,15 @@ def resume_upload(request):
                 "message": "不支持的文件类型。请上传 Excel、HTML 或 PDF 文件。",
             }
         )
+
+    local_path = os.path.join(UPLOAD_FOLDER, filename)
+    full_path = os.path.join(settings.MEDIA_ROOT, local_path)
+
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    with open(full_path, "wb+") as destination:
+        for chunk in uploaded_file.chunks():
+            destination.write(chunk)
+
     upload_record = UploadRecord.objects.create(
         user=request.user,
         filename=filename,
@@ -136,31 +176,89 @@ def resume_upload(request):
         resume=None,
     )
 
+    # TODO: 简历解析后需要 HH 确认并保存
     try:
-        resume_id, resume_data = "demo123456", {}
-        resume_obj, created = Resume.objects.get_or_create(resume_id=resume_id)
+        resume_id, resume_dict = resume_parser.parse(full_path)
+        logging.debug(f"解析结果：{resume_dict}")
 
-        # 覆盖原简历字段
-        for field, value in resume_data.items():
-            setattr(resume_obj, field, value)
-        resume_obj.save()
+        resume_obj, created = Resume.objects.get_or_create(
+            resume_id=resume_id, defaults=resume_dict
+        )
+        if not created:
+            for field, value in resume_dict.items():
+                setattr(resume_obj, field, value)
+            resume_obj.save()
 
         upload_record.parse_status = "success"
         upload_record.resume = resume_obj
         upload_record.save()
 
         return JsonResponse(
-            {"success": True, "message": f"{filename} 上传成功且解析完成！"}
+            {
+                "success": True,
+                "message": f"{filename} 上传成功且解析完成，简历已保存。",
+                "resume_id": resume_id,
+                "resume_data": resume_dict,
+                "upload_record_id": upload_record.id,
+            }
         )
+
     except Exception as e:
         # 解析失败
-        return JsonResponse(
-            {"success": False, "message": f"{filename} 上传成功，但解析失败: {str(e)}"}
-        )
+        upload_record.error_message = str(e)
+        upload_record.save()
+        if settings.DEBUG:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": f"{filename} 上传成功，但解析失败: {str(e)}",
+                }
+            )
+        else:
+            return JsonResponse(
+                {"success": False, "message": f"{filename} 上传成功，但解析失败！"}
+            )
 
 
-def resume_modify():
-    pass
+@require_POST
+@login_required
+def resume_confirm(request):
+    data = json.loads(request.body)
+    resume_id = data.get("resume_id")
+    resume_dict = data.get("resume_data")
+    record_id = data.get("upload_record_id")
+
+    resume_obj, created = Resume.objects.get_or_create(
+        resume_id=resume_id, defaults=resume_dict
+    )
+    if not created:
+        for field, value in resume_dict.items():
+            setattr(resume_obj, field, value)
+        resume_obj.save()
+
+    UploadRecord.objects.filter(id=record_id).update(
+        parse_status="success", resume=resume_obj
+    )
+
+    return JsonResponse({"success": True, "message": "简历已确认并保存！"})
+
+
+@login_required
+def resume_edit(request, resume_id):
+    resume = get_object_or_404(Resume, pk=resume_id)
+
+    if request.method == "POST":
+        form = ResumeForm(request.POST, instance=resume)
+        if form.is_valid():
+            logging.debug("简历已成功修改")
+            form.save()
+            return redirect("resume_list")
+        else:
+            logging.warning("表单校验失败：%s", form.errors)
+    else:
+        form = ResumeForm(instance=resume)
+
+    return render(request, "resumes/Edit.html", {"form": form, "resume": resume})
 
 
 # TODO: 展示单独一份简历，可加入用户画像等功能

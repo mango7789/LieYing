@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-t2bbl9uyh0tf1!f7*lhhrkixebdr)a-7gs6f3l+xks+l^hvqvx
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -39,9 +39,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core",
-    "users",
+    "users.apps.UsersConfig",
     "resumes",
     "jobs",
+    "match",
 ]
 
 MIDDLEWARE = [
@@ -143,7 +144,8 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Handle login and logput
-LOGIN_REDIRECT_URL = "/home/"
+LOGIN_URL = "/login/"
+# LOGIN_REDIRECT_URL = "/home/"
 LOGOUT_REDIRECT_URL = "/login/"
 
 # Logger
@@ -160,3 +162,10 @@ LOGGING = {
         "level": "DEBUG",
     },
 }
+
+# Media
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# user-password for login remember time
+REMEMBER_ME_SECONDS = 60 * 60 * 24 * 14

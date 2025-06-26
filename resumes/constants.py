@@ -9,3 +9,4 @@ WORKING_Y_CHOICES: Final = ["不限", "应届生", "1~3年", "3~5年", "5~10年"
 MB: Final = 1024 * 1024
 MAX_UPLOAD_SIZE = 5
 ALLOWED_EXTENSIONS = (".xls", ".xlsx", ".html", ".htm", ".pdf")
+UPLOAD_FOLDER = "resumes"

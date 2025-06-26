@@ -16,32 +16,19 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
-from django.views.generic import RedirectView
-
-import core.views as core_view
-import users.views as user_view
-import resumes.views as resume_view
-import jobs.views as job_view
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     # 超级管理员
     path("admin/", admin.site.urls),
     # 功能
-    path("encrypt/", core_view.encrypt, name="encrypt"),
+    path("encrypt/", include("core.urls")),
     # 用户/管理员 处理注册、登录、权限管理
-    path("", RedirectView.as_view(url="/login/", permanent=False)),
-    path("login/", user_view.login, name="login"),
-    path("logout/", user_view.logout, name="logout"),
-    path("register/", user_view.register, name="register"),
-    path("home/", user_view.home, name="home"),
+    path("", include("users.urls")),
     # 简历模块
-    path("resume/list/", resume_view.resume_list, name="resume_list"),
-    path("resume/upload/", resume_view.resume_upload, name="resume_upload"),
-    path(
-        "resume/upload/page", resume_view.resume_upload_page, name="resume_upload_page"
-    ),
-    path("resumes/<str:resume_id>/", resume_view.resume_detail, name="resume_detail"),
-    # 岗位模块
-    path("job/list/", job_view.job_list, name="job_list"),
-]
+    path("resume/", include("resumes.urls")),
+    # 工作模块
+    path("job/", include("jobs.urls")),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

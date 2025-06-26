@@ -5,10 +5,10 @@
     <div class="container">
         <nav class="d-flex align-items-center justify-content-between">
             <!-- 左侧 Logo -->
-            <div class="d-flex align-items-center">
+            <a href="{% url 'home' %}" class="d-flex align-items-center text-decoration-none">
                 <i class="fas fa-spider me-2"></i>
                 <span class="fw-bold fs-5">猎鹰</span>
-            </div>
+            </a>
 
             <!-- 中间导航栏 -->
             <div class="flex-grow-1 d-flex justify-content-center">
@@ -26,6 +26,7 @@
                         <ul class="dropdown-menu" aria-labelledby="resumeDropdown">
                             <li><a class="dropdown-item" href="{% url 'resume_list' %}">简历列表</a></li>
                             <li><a class="dropdown-item" href="{% url 'resume_upload_page' %}">上传简历</a></li>
+                            <li><a class="dropdown-item" href="{% url 'resume_upload_history' %}">上传记录</a></li>
                         </ul>
                     </li>
 

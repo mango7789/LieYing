@@ -2,15 +2,15 @@
 {% block content %}
 <section class="hero">
     <div class="container">
-        <h1>欢迎使用 DataSpider 数据库管理系统</h1>
+        <h1>欢迎使用猎鹰简历管理系统</h1>
         <p>实时获取、精准分析、直观展示 - 让数据为您创造价值</p>
         <div class="cta-buttons">
-                    <a href=# class="btn btn-primary">开始数据探索</a>
+            <a href={% url 'resume_list' %} class="btn btn-primary">开始数据探索</a>
         </div>
     <div>
 </section>
 
-<section class="features">
+<!-- <section class="features">
         <div class="container">
             <div class="section-title">
                 <h2>核心功能</h2>
@@ -40,30 +40,42 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
 
 <section class="stats mb-5">
-    <div class="row text-center g-4">
-        <div class="col-md-4">
-            <div class="card p-3">
-                <div class="stat-value">{{ website_count }}</div>
-                <div class="stat-label">活跃数据源</div>
+    <div class="container">  <!-- 添加 container 容器 -->
+        <div class="row text-center g-4">  <!-- 确保只有一行 -->
+            <div class="col-md-3">  <!-- 每列占3格（12/4=3） -->
+                <div class="card p-3">
+                    <div class="stat-value">{{ resume_count }}</div>
+                    <div class="stat-label">简历数量</div>
+                </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card p-3">
-                <div class="stat-value">{{ page_count }}</div>
-                <div class="stat-label">库内网页总数</div>
+            <div class="col-md-3">
+                <div class="card p-3">
+                    <div class="stat-value">{{ job_count }}</div>
+                    <div class="stat-label">岗位数量</div>
+                </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card p-3">
-                <div class="stat-value">{{ keyword_count }}</div>
-                <div class="stat-label">库内关键词记录</div>
+            <div class="col-md-3">
+                <div class="card p-3">
+                    <div class="stat-value">{{ user_count }}</div>
+                    <div class="stat-label">猎头数量</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3">
+                    <div class="stat-value">{{ matching_count }}</div>
+                    <div class="stat-label">打分数量</div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
 {% endblock %}
+
+<!-- {% block extra_js %}
+{% include "components/Toast_js.html" %}
+{% endblock %} -->
