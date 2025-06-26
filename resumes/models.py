@@ -72,6 +72,12 @@ class UploadRecord(models.Model):
         on_delete=models.SET_NULL,
         verbose_name="关联简历",
     )
+    error_message = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="失败原因",
+        help_text="记录解析失败时的异常信息",
+    )
 
     def __str__(self):
         return f"{self.user.username} 上传了 {self.filename} 于 {self.upload_time}，状态：{self.get_parse_status_display()}"
