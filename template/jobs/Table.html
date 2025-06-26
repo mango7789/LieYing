@@ -1,0 +1,37 @@
+<table class="table table-striped">
+    <thead class="pretty-thead-row">
+        <tr>
+            <th>职位</th>
+            <th>招聘企业</th>
+            <th>工作地点</th>
+            <th>工作年限</th>
+            <th>学历要求</th>
+            <th>更新时间</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for job in jobs %}
+        <tr>
+            <td>{{ job.name }}</td>
+            <td>{{ job.company }}</td>
+            <td>{{ job.city|join:", " }}</td>
+            <td>{{ job.work_experience|default:"-" }}</td>
+            <td>{{ job.education|join:", "}}</td>
+            <td>{{ job.created_at }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center">没有找到匹配的简历</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="d-flex justify-content-center mt-4">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary me-2 ajax-page">上一页</a>
+    {% endif %}
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary ajax-page">下一页</a>
+    {% endif %}
+</div>

@@ -42,4 +42,6 @@ urlpatterns = [
         "resume/upload/page", resume_view.resume_upload_page, name="resume_upload_page"
     ),
     path("resumes/<str:resume_id>/", resume_view.resume_detail, name="resume_detail"),
+    # 岗位模块
+    path("job/list/", job_view.job_list, name="job_list"),
 ]
