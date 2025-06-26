@@ -44,23 +44,31 @@
 
 
 <section class="stats mb-5">
-    <div class="row text-center g-4">
-        <div class="col-md-4">
-            <div class="card p-3">
-                <div class="stat-value">{{ website_count }}</div>
-                <div class="stat-label">活跃数据源</div>
+    <div class="container">  <!-- 添加 container 容器 -->
+        <div class="row text-center g-4">  <!-- 确保只有一行 -->
+            <div class="col-md-3">  <!-- 每列占3格（12/4=3） -->
+                <div class="card p-3">
+                    <div class="stat-value">{{ resume_count }}</div>
+                    <div class="stat-label">简历数量</div>
+                </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card p-3">
-                <div class="stat-value">{{ page_count }}</div>
-                <div class="stat-label">库内网页总数</div>
+            <div class="col-md-3">
+                <div class="card p-3">
+                    <div class="stat-value">{{ job_count }}</div>
+                    <div class="stat-label">岗位数量</div>
+                </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card p-3">
-                <div class="stat-value">{{ keyword_count }}</div>
-                <div class="stat-label">库内关键词记录</div>
+            <div class="col-md-3">
+                <div class="card p-3">
+                    <div class="stat-value">{{ user_count }}</div>
+                    <div class="stat-label">猎头数量</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3">
+                    <div class="stat-value">{{ matching_count }}</div>
+                    <div class="stat-label">打分数量</div>
+                </div>
             </div>
         </div>
     </div>
