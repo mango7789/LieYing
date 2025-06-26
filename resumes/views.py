@@ -109,7 +109,24 @@ def resume_upload_page(request):
 # TODO: 简历上传记录
 @login_required
 def resume_upload_list(request):
-    pass
+    query = request.GET.get("q", "")
+    page_number = request.GET.get("page", 1)
+
+    records = UploadRecord.objects.filter(user=request.user)
+
+    if query:
+        records = records.filter(filename__icontains=query)
+
+    records = records.order_by("-upload_time")
+
+    paginator = Paginator(records, 10)  # 每页显示 10 条记录
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "resumes/History.html",
+        {"page_obj": page_obj, "query": query}
+    )
 
 
 @login_required
@@ -158,13 +175,23 @@ def resume_upload(request):
     try:
         resume_id, resume_dict = resume_parser.parse(full_path)
         logging.debug(f"解析结果：{resume_dict}")
+
+        resume_obj, created = Resume.objects.get_or_create(
+            resume_id=resume_id, defaults=resume_dict
+        )
+        if not created:
+            for field, value in resume_dict.items():
+                setattr(resume_obj, field, value)
+            resume_obj.save()
+
         upload_record.parse_status = "success"
+        upload_record.resume = resume_obj
         upload_record.save()
 
         return JsonResponse(
             {
                 "success": True,
-                "message": f"{filename} 上传成功且解析完成，请确认信息后保存。",
+                "message": f"{filename} 上传成功且解析完成，简历已保存。",
                 "resume_id": resume_id,
                 "resume_data": resume_dict,
                 "upload_record_id": upload_record.id,

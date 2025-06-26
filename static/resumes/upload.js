@@ -4,10 +4,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const uploadArea = document.getElementById("upload-area");
   const fileInput = document.getElementById("file-input");
   const uploadForm = document.getElementById("upload-form");
-  const confirmForm = document.getElementById("resume-confirm-form");
+  const fileListEl = document.getElementById("file-list");
+  const confirmUploadBtn = document.getElementById("confirm-upload");
+
   const toastEl = document.getElementById("message-toast");
   const toastBody = toastEl?.querySelector(".toast-body");
   const toast = toastEl ? new bootstrap.Toast(toastEl) : null;
+
+  let selectedFiles = [];
 
   function showToast(message) {
     if (!toast || !toastBody) {
@@ -17,111 +21,6 @@ document.addEventListener("DOMContentLoaded", function () {
       toast.show();
     }
   }
-
-  // 点击上传区域，触发选择文件
-  uploadArea.addEventListener("click", () => fileInput.click());
-
-  // 文件选中后自动上传
-  fileInput.addEventListener("change", () => {
-    if (fileInput.files.length > 0) {
-      uploadForm.dispatchEvent(new Event("submit"));
-    }
-  });
-
-  // 上传简历表单提交
-  uploadForm.addEventListener("submit", function (e) {
-    e.preventDefault();
-    const file = fileInput.files[0];
-    if (!file) {
-      showToast("请选择文件！");
-      return;
-    }
-
-    const formData = new FormData(uploadForm);
-
-    fetch(uploadForm.action, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": getCookie("csrftoken"),
-      },
-      body: formData,
-    })
-      .then((resp) => resp.json())
-      .then((data) => {
-        console.log("解析结果：", data);
-        showToast(data.message);
-
-        if (data.success && data.resume_data) {
-          populateForm(data.resume_data, data.resume_id);
-        }
-      })
-      .catch(() => showToast("上传失败，请稍后重试"));
-  });
-
-  // 填充右侧确认表单
-  function populateForm(data, resumeId) {
-    confirmForm.classList.remove("d-none");
-    document.getElementById("resume-id").value = resumeId;
-
-    for (const [key, value] of Object.entries(data)) {
-      const input = confirmForm.querySelector(`[name="${key}"]`);
-      if (!input) continue;
-
-      if (input.tagName === "TEXTAREA" || input.tagName === "INPUT") {
-        if (Array.isArray(value)) {
-          input.value = value.join(", ");
-        } else if (typeof value === "object") {
-          input.value = JSON.stringify(value, null, 2);
-        } else {
-          input.value = value;
-        }
-      } else if (input.tagName === "SELECT") {
-        input.value = value;
-      }
-    }
-  }
-
-  // 提交确认简历表单
-  confirmForm.addEventListener("submit", function (e) {
-    e.preventDefault();
-    const formData = new FormData(confirmForm);
-    const data = {};
-
-    for (const [key, val] of formData.entries()) {
-      if (["expected_positions", "skills", "tags"].includes(key)) {
-        data[key] = val.split(",").map(v => v.trim()).filter(v => v);
-      } else if (
-        ["education", "project_experiences", "working_experiences"].includes(key)
-      ) {
-        try {
-          data[key] = JSON.parse(val);
-        } catch {
-          showToast(`字段 ${key} 需要合法 JSON`);
-          return;
-        }
-      } else {
-        data[key] = val;
-      }
-    }
-
-    fetch("/resume/confirm/", {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": getCookie("csrftoken"),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((resp) => resp.json())
-      .then((data) => {
-        showToast(data.message);
-        if (data.success) {
-          confirmForm.reset();
-          confirmForm.classList.add("d-none");
-        }
-      })
-      .catch(() => showToast("确认保存失败，请稍后重试"));
-  });
 
   function getCookie(name) {
     let cookieValue = null;
@@ -137,4 +36,141 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     return cookieValue;
   }
+
+  // 点击上传区域触发文件选择
+  uploadArea.addEventListener("click", () => fileInput.click());
+
+  // 文件选择后加入列表（同名文件确认替换）
+  fileInput.addEventListener("change", () => {
+    for (const file of fileInput.files) {
+      const existIndex = selectedFiles.findIndex(f => f.name === file.name);
+      if (existIndex === -1) {
+        // 不存在，直接添加
+        selectedFiles.push(file);
+      } else {
+        // 存在，弹窗确认是否替换（同步确认框只能用window.confirm）
+        const confirmReplace = window.confirm(`文件 "${file.name}" 已存在，是否替换？`);
+        if (confirmReplace) {
+          selectedFiles.splice(existIndex, 1, file);
+          showToast(`文件 "${file.name}" 已被替换`);
+        }
+      }
+    }
+    renderFileList();
+    fileInput.value = ""; // 允许重新选择同名文件
+  });
+
+  // 渲染待上传文件列表
+  function renderFileList() {
+    fileListEl.innerHTML = "";
+
+    selectedFiles.forEach((file, index) => {
+      // 判断文件类型，决定class和icon
+      let fileClass = "default";
+      let iconClass = "bi-file-earmark";
+
+      if (file.type.includes("pdf") || file.name.endsWith(".pdf")) {
+        fileClass = "pdf";
+        iconClass = "bi-file-earmark-pdf";
+      } else if (
+        file.type.includes("excel") ||
+        file.name.endsWith(".xls") ||
+        file.name.endsWith(".xlsx") ||
+        file.name.endsWith(".csv")
+      ) {
+        fileClass = "excel";
+        iconClass = "bi-file-earmark-spreadsheet";
+      } else if (
+        file.type.includes("html") ||
+        file.name.endsWith(".html") ||
+        file.name.endsWith(".htm")
+      ) {
+        fileClass = "html";
+        iconClass = "bi-file-earmark-code";
+      }
+
+      const li = document.createElement("li");
+      li.className = `list-group-item ${fileClass}`;
+      li.style.display = "flex";
+      li.style.alignItems = "center";
+      li.style.justifyContent = "space-between";
+
+      li.innerHTML = `
+        <span style="display:flex; align-items:center; gap:8px; flex-grow:1;">
+          <i class="bi ${iconClass} file-icon"></i>
+          <span class="file-name">${file.name}</span>
+        </span>
+        <button type="button" class="remove-btn btn btn-sm btn-danger" data-index="${index}" title="删除文件">×</button>
+      `;
+
+      fileListEl.appendChild(li);
+    });
+
+    confirmUploadBtn.disabled = selectedFiles.length === 0;
+  }
+
+  // 删除文件，弹窗确认
+  fileListEl.addEventListener("click", (e) => {
+    if (e.target.classList.contains("remove-btn")) {
+      const index = Number(e.target.dataset.index);
+      if (Number.isNaN(index)) return;
+
+      const fileName = selectedFiles[index]?.name;
+      if (!fileName) return;
+
+      if (window.confirm(`确定要删除文件 "${fileName}" 吗？`)) {
+        selectedFiles.splice(index, 1);
+        renderFileList();
+        showToast(`文件 "${fileName}" 已删除`);
+      }
+    }
+  });
+
+
+  // 确认上传
+  confirmUploadBtn.addEventListener("click", async () => {
+    const resultBody = document.getElementById("upload-result-body");
+    const resultSection = document.getElementById("upload-result");
+    resultBody.innerHTML = "";
+
+    for (const file of selectedFiles) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      let status = "失败";
+      let message = "未知错误";
+
+      try {
+        const response = await fetch(uploadForm.action, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: formData,
+        });
+
+        const data = await response.json();
+        status = data.success ? "成功" : "失败";
+        message = data.message || "";
+
+        // showToast(`${file.name}: ${message}`);
+      } catch (err) {
+        message = "上传失败，请检查网络";
+        // showToast(`${file.name}: ${message}`);
+      }
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${file.name}</td>
+        <td class="${status === "成功" ? "text-success" : "text-danger"}">${status}</td>
+        <td>${message}</td>
+      `;
+      resultBody.appendChild(row);
+    }
+
+    resultSection.classList.remove("d-none");
+    selectedFiles = [];
+    renderFileList();
+  });
 });
+
