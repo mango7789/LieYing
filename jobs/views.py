@@ -10,12 +10,11 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .models import JobPosition, JobOwner
 from .constants import *
-from .parser import parse_html_file
 from core.utils.crypto import decrypt_params
 
 
 # Create your views here.
-login_required
+@login_required
 def job_list(request):
     q = request.GET.get("q")
     if q:
@@ -31,7 +30,7 @@ def job_list(request):
             "keyword": request.GET.get("keyword", "").strip(),
         }
 
-    qs = JobPosition.objects.all()
+    qs = JobPosition.objects.all().order_by("-id")
     city = params["city"]
     education = params["education"]
     work_years = params["work_years"]

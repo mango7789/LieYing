@@ -8,7 +8,7 @@ from django.conf import settings
 from resumes.models import Resume
 from jobs.models import JobPosition
 from users.models import UserProfile
-from match.models import Matching 
+from match.models import Matching
 
 
 def root_redirect(request):
@@ -64,9 +64,13 @@ def home_view(request):
     job_count = JobPosition.objects.count()
     user_count = UserProfile.objects.filter(role="猎头").count()
     matching_count = Matching.objects.count()
-    return render(request, "users/Main.html", {
-        "resume_count": resume_count,
-        "job_count": job_count,
-        "user_count": user_count,
-        "matching_count": matching_count,
-    })
+    return render(
+        request,
+        "users/Main.html",
+        {
+            "resume_count": resume_count,
+            "job_count": job_count,
+            "user_count": user_count,
+            "matching_count": matching_count,
+        },
+    )

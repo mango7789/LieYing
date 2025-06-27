@@ -47,7 +47,7 @@ class Parser:
             soup = BeautifulSoup(html_content, "html.parser")
 
             # 提取名字
-            name_elem = soup.select_one('div.name-box > h4.name.ellipsis')
+            name_elem = soup.select_one("div.name-box > h4.name.ellipsis")
             data_dict["name"] = name_elem.text.strip() if name_elem else ""
 
             # 提取简历ID

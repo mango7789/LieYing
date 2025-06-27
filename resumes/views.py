@@ -106,7 +106,6 @@ def resume_upload_page(request):
     return render(request, "resumes/Upload.html")
 
 
-# TODO: 简历上传记录
 @login_required
 def resume_upload_list(request):
     query = request.GET.get("q", "")
@@ -127,10 +126,14 @@ def resume_upload_list(request):
     paginator = Paginator(records, 10)  # 每页显示 10 条记录
     page_obj = paginator.get_page(page_number)
 
+    for record in page_obj:
+        file_path = os.path.join(settings.MEDIA_ROOT, UPLOAD_FOLDER, record.filename)
+        record.file_exists = os.path.exists(file_path)
+
     return render(
         request,
         "resumes/History.html",
-        {"page_obj": page_obj, "query": query}
+        {"page_obj": page_obj, "query": query, "MEDIA_URL": settings.MEDIA_URL},
     )
 
 
@@ -176,7 +179,7 @@ def resume_upload(request):
         resume=None,
     )
 
-    # TODO: 简历解析后需要 HH 确认并保存
+    # NOTE: 批量解析，不再需要用户进行确认
     try:
         resume_id, resume_dict = resume_parser.parse(full_path)
         logging.debug(f"解析结果：{resume_dict}")

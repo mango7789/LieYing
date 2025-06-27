@@ -1,5 +1,5 @@
 *.pyc
 .env
-migrations/   
-__pycache__/  
+migrations/  
+__pycache__/
 /media
