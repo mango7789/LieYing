@@ -49,6 +49,18 @@ class Resume(models.Model):
         verbose_name = "简历"
         verbose_name_plural = "简历"
 
+    def to_json(self) -> dict:
+        return {
+            "resume_id": self.resume_id,
+            "name": self.name,
+            "skills": self.skills,
+            "education": self.education,
+            "work_experience": self.working_experiences,
+            "project_experience": self.project_experiences,
+            "status": self.status,
+            "expectation": self.expected_positions,
+        }
+
 
 class UploadRecord(models.Model):
     PARSE_STATUS_CHOICES = (

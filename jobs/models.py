@@ -1,3 +1,4 @@
+import re
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -21,6 +22,26 @@ class JobPosition(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.company}"
+
+    def to_json(self) -> dict:
+        return {
+            "job_id": str(self.id),
+            "name": self.name,
+            "company": self.company,
+            "city": self.city,
+            "salary": self.salary,
+            "education": self.education or "不限",
+            "years_of_working": self.work_experience or "不限",
+            "language": self.language,
+            "responsibilities": self._split_text(self.responsibilities),
+            "requirements": self._split_text(self.requirements),
+        }
+
+    def _split_text(self, text: str) -> list:
+        if not text:
+            return []
+        items = re.split(r"[。\n；;]+", text)
+        return [item.strip() for item in items if item.strip()]
 
 
 class JobOwner(models.Model):

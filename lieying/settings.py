@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "resumes",
     "jobs",
     "match",
+    "django_apscheduler",
 ]
 
 MIDDLEWARE = [
