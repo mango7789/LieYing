@@ -7,6 +7,7 @@
             <th>工作年限</th>
             <th>学历要求</th>
             <th>更新时间</th>
+            <th>操作</th>  <!-- 新增操作列 -->
         </tr>
     </thead>
     <tbody>
@@ -14,15 +15,17 @@
         <tr>
             <td>{{ job.name }}</td>
             <td>{{ job.company }}</td>
-            <td>{{ job.city|join:", " }}</td>
+            <td>{{ job.city }}</td>
             <td>{{ job.work_experience|default:"-" }}</td>
-            <td>{{ job.education|join:", "}}</td>
+            <td>{{ job.education }}</td>
             <td>{{ job.created_at }}</td>
-            <a href="{% url 'job_edit' job.id %}" class="btn btn-sm btn-outline-primary">编辑</a>
+            <td>
+                 <a href="{% url 'job_edit' job.id %}" class="btn btn-sm btn-outline-primary" style="padding: 0.1rem 0.7rem; font-size: 0.85rem;">编辑</a>
+            </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="6" class="text-center">没有找到匹配的简历</td>
+            <td colspan="7" class="text-center">没有找到匹配的简历</td>
         </tr>
         {% endfor %}
     </tbody>

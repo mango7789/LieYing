@@ -88,25 +88,37 @@ def job_upload_page(request):
 @require_POST
 @login_required
 def job_upload(request):
-    files = request.FILES.getlist("files")
-    result = []
-    for f in files:
-        # 这里只做简单保存，实际可调用解析逻辑
-        filename = f.name
-        ext = os.path.splitext(filename)[1].lower()
-        if ext not in [".pdf", ".html", ".htm", ".xls", ".xlsx", ".csv"]:
-            result.append(
-                {"filename": filename, "status": "失败", "msg": "文件类型不支持"}
-            )
-            continue
-        # 保存文件到 media/jobs_uploads/
-        save_path = os.path.join("jobs_uploads", filename)
-        with open(os.path.join(settings.MEDIA_ROOT, save_path), "wb+") as dest:
-            for chunk in f.chunks():
-                dest.write(chunk)
-        # TODO: 解析文件并入库
-        result.append({"filename": filename, "status": "成功", "msg": "上传成功"})
-    return JsonResponse({"result": result})
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        company = request.POST.get("company", "").strip()
+        city = request.POST.get("city", "").strip()
+        salary = request.POST.get("salary", "").strip()
+        work_experience = request.POST.get("work_experience", "").strip()
+        education = request.POST.get("education", "").strip()
+        language = request.POST.get("language", "").strip()
+        responsibilities = request.POST.get("responsibilities", "").strip()
+        requirements = request.POST.get("requirements", "").strip()
+
+        # 简单校验
+        if not name or not company or not city:
+            messages.error(request, "岗位名称、企业名称、工作地点为必填项")
+            return render(request, "jobs/Upload.html")
+        # 创建岗位
+        JobPosition.objects.create(
+            name=name,
+            company=company,
+            city=city,
+            salary=salary,
+            work_experience=work_experience,
+            education=education,
+            language=language,
+            responsibilities=responsibilities,
+            requirements=requirements,
+        )
+        messages.success(request, "岗位信息已成功添加！")
+        return redirect("job_upload_page")
+    else:
+        return redirect("job_upload_page")
 
 
 @login_required
