@@ -1,0 +1,110 @@
+<div class="mb-3">
+    <label class="form-label">{{ label }}</label>
+    <div id="{{ id_prefix }}-container">
+        {% for item in items %}
+        <div class="structured-item border rounded p-2 mb-2 d-flex align-items-start gap-2">
+            {% if item.items %}
+            {% for key, val in item.items %}
+            <div class="flex-grow-1">
+                <label class="form-label small">{{ key|capfirst }}</label>
+                <input type="text" class="form-control field-{{ key }}" value="{{ val }}">
+            </div>
+            {% endfor %}
+            {% else %}
+            <input type="text" class="form-control field-value" value="{{ item }}">
+            {% endif %}
+            <button type="button" class="btn btn-outline-danger btn-sm btn-remove">Delete</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" class="btn btn-outline-primary mt-2" id="{{ id_prefix }}-add-btn">添加一项</button>
+    <input type="hidden" name="{{ field.html_name }}" id="id_{{ id_prefix }}">
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const prefix = "{{ id_prefix }}";
+        const container = document.getElementById(prefix + "-container");
+        const addBtn = document.getElementById(prefix + "-add-btn");
+        const hiddenInput = document.getElementById("id_" + prefix);
+
+        // 自动推断字段 schema
+        function getFieldSchema() {
+            switch (prefix) {
+                case "education":
+                    return ["school", "time", "details"];
+                case "projects":
+                    return ["project_name", "employment_period", "details"];
+                case "workings":
+                    return ["company", "employment_period", "job_name"];
+                case "positions":
+                    return ["position", "location", "salary"]; // 列表形式
+                case "skills":
+                    return []; // 列表形式
+                default:
+                    return [];
+            }
+        }
+
+        function updateHidden() {
+            const schema = getFieldSchema();
+            const result = [];
+
+            container.querySelectorAll(".structured-item").forEach(item => {
+                if (schema.length === 0) {
+                    // 纯字符串项
+                    const input = item.querySelector(".field-value");
+                    const val = input?.value?.trim();
+                    if (val) result.push(val);
+                } else {
+                    const obj = {};
+                    schema.forEach(field => {
+                        const input = item.querySelector(".field-" + field);
+                        if (input) obj[field] = input.value.trim();
+                    });
+                    if (Object.values(obj).some(v => v)) result.push(obj);
+                }
+            });
+
+            hiddenInput.value = JSON.stringify(result);
+        }
+
+        addBtn.onclick = function () {
+            const schema = getFieldSchema();
+            const div = document.createElement("div");
+            div.className = "structured-item border rounded p-2 mb-2 d-flex align-items-start gap-2";
+
+            if (schema.length === 0) {
+                // 添加字符串项
+                div.innerHTML = `
+          <input type="text" class="form-control field-value" placeholder="请输入...">
+          <button type="button" class="btn btn-outline-danger btn-sm btn-remove">Delete</button>
+        `;
+            } else {
+                div.innerHTML = schema.map(field => `
+          <div class="flex-grow-1">
+            <label class="form-label small">${field}</label>
+            <input type="text" class="form-control field-${field}" placeholder="${field}">
+          </div>
+        `).join("") + `<button type="button" class="btn btn-outline-danger btn-sm btn-remove">Delete</button>`;
+            }
+
+            container.appendChild(div);
+            bindRemove();
+        };
+
+        function bindRemove() {
+            container.querySelectorAll(".btn-remove").forEach(btn => {
+                btn.onclick = () => {
+                    btn.parentElement.remove();
+                    updateHidden();
+                };
+            });
+        }
+
+        bindRemove();
+        container.closest("form").addEventListener("submit", updateHidden);
+    });
+</script>
+  

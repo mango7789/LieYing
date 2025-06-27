@@ -75,32 +75,44 @@ class Parser:
                 filtered = [s for s in strings if s]
                 personal_info.append(" ".join(filtered))
             data_dict["personal_info"] = " | ".join(personal_info)
-
+            
             # 提取求职意向
-            job_intention = []
+            expected_positions = []
             job_intention_div = soup.select_one('h3:contains("求职意向") + div.tabs')
+
             if job_intention_div:
                 position = job_intention_div.select_one("span.title[title]")
                 location = job_intention_div.select_one("span.title:not([title])")
                 salary = job_intention_div.select_one("span.salary")
 
-                if position and position.text.strip():
-                    job_intention.append(f"职位: {position.text.strip()}")
-                if location and location.text.strip():
-                    job_intention.append(f"地点: {location.text.strip()}")
-                if salary and salary.text.strip():
-                    job_intention.append(f"薪资: {salary.text.strip()}")
+                pos_data = {
+                    "position": position.text.strip() if position else "",
+                    "location": location.text.strip() if location else "",
+                    "salary": salary.text.strip() if salary else "",
+                }
 
-            if not job_intention:
+                # 只要至少一个字段有内容就加入
+                if any(pos_data.values()):
+                    expected_positions.append(pos_data)
+
+            # 备选：旧结构下的兜底方式
+            if not expected_positions:
+                pos_data = {"position": "", "location": "", "salary": ""}
                 intention_elems = soup.select(
                     "#resume-detail-job-exp-info > div:nth-child(1) > div:nth-child(1) > span"
                 )
                 for elem in intention_elems:
-                    if elem.text.strip():
-                        job_intention.append(elem.text.strip())
-            data_dict["expected_positions"] = (
-                " | ".join(job_intention) if job_intention else "未提供求职意向"
-            )
+                    text = elem.text.strip()
+                    if "职位" in text:
+                        pos_data["position"] = text.split("：")[-1].strip()
+                    elif "地点" in text:
+                        pos_data["location"] = text.split("：")[-1].strip()
+                    elif "薪资" in text or "待遇" in text:
+                        pos_data["salary"] = text.split("：")[-1].strip()
+                if any(pos_data.values()):
+                    expected_positions.append(pos_data)
+
+            data_dict["expected_positions"] = expected_positions
 
             # 提取资格证书
             certificates = []

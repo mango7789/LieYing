@@ -1,174 +1,191 @@
 {% extends "Layout.html" %}
 {% block content %}
 <div class="container my-4">
-  <div class="card shadow-sm">
-    <div class="card-header">
-      <h3 class="mb-0">编辑简历 — {{ resume.name }}</h3>
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h3 class="mb-0">编辑简历 — {{ resume.name }}</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+
+                <!-- 姓名 -->
+                <div class="mb-3">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                    {{ form.name }}
+                    {% for err in form.name.errors %}
+                    <div class="text-danger small">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 状态 -->
+                <div class="mb-3">
+                    <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
+                    {{ form.status }}
+                    {% for err in form.status.errors %}
+                    <div class="text-danger small">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 当前状态 -->
+                <div class="mb-3">
+                    <label for="{{ form.current_status.id_for_label }}" class="form-label">{{ form.current_status.label }}</label>
+                    {{ form.current_status }}
+                    {% for err in form.current_status.errors %}
+                    <div class="text-danger small">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 个人信息 -->
+                <div class="mb-3">
+                    <label for="{{ form.personal_info.id_for_label }}" class="form-label">{{ form.personal_info.label }}</label>
+                    {{ form.personal_info }}
+                    {% for err in form.personal_info.errors %}
+                    <div class="text-danger small">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 电话 -->
+                <div class="mb-3">
+                    <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+                    {{ form.phone }}
+                    {% for err in form.phone.errors %}
+                    <div class="text-danger small">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 邮箱 -->
+                <div class="mb-3">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                    {{ form.email }}
+                    {% for err in form.email.errors %}
+                    <div class="text-danger small">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 证书 -->
+                <div class="mb-3">
+                    <label for="{{ form.certificates.id_for_label }}" class="form-label">{{ form.certificates.label }}</label>
+                    {{ form.certificates }}
+                    {% for err in form.certificates.errors %}
+                    <div class="text-danger small">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 自我评价 -->
+                <div class="mb-3">
+                    <label for="{{ form.self_evaluation.id_for_label }}" class="form-label">{{ form.self_evaluation.label }}</label>
+                    {{ form.self_evaluation }}
+                    {% for err in form.self_evaluation.errors %}
+                    <div class="text-danger small">{{ err }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 期望岗位结构化输入 -->
+                {% include "resumes/StructuredInput.html" with label="期望岗位" field=form.expected_positions items=resume.expected_positions id_prefix="positions" schema="possion,location,salary" placeholder="如：Java开发工程师" %}
+
+                <!-- 教育经历结构化输入 -->
+                {% include "resumes/StructuredInput.html" with label="教育经历" field=form.education items=resume.education id_prefix="education" schema="school,time,details" placeholder="如：XX大学, 2018-2022, 本科/计算机科学" %}
+
+                <!-- 技能结构化输入 -->
+                {% include "resumes/StructuredInput.html" with label="技能" field=form.skills items=resume.skills id_prefix="skills" schema="text" placeholder="如：Python" %}
+
+                <!-- 项目经历结构化输入 -->
+                {% include "resumes/StructuredInput.html" with label="项目经历" field=form.project_experiences items=resume.project_experiences id_prefix="projects" schema="project_name,employment_period,details" placeholder="如：后台系统开发, 2021.06-2022.05, 负责API设计" %}
+
+                <!-- 工作经历结构化输入 -->
+                {% include "resumes/StructuredInput.html" with label="工作经历" field=form.working_experiences items=resume.working_experiences id_prefix="workings" schema="company,employment_period,details" placeholder="如：XX科技, 2019-2021, Java开发" %}
+
+                <!-- 当前状态，只展示 -->
+                <div class="mb-3">
+                    <label class="form-label">当前状态</label>
+                    <input type="text" class="form-control" value="{{ resume.current_status }}" readonly>
+                </div>
+
+                <!-- 标签，只展示 -->
+                <div class="mb-3">
+                    <label class="form-label">标签</label>
+                    <input type="text" class="form-control" value="{{ resume.tags|join:', ' }}" readonly>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'resume_list' %}" class="btn btn-outline-secondary">取消</a>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="card-body">
-      <form method="post" novalidate>
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-
-        <!-- 姓名 -->
-        <div class="mb-3">
-        <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
-        {{ form.name }}
-        {% for err in form.name.errors %}
-            <div class="text-danger small">{{ err }}</div>
-        {% endfor %}
-        </div>
-
-        <!-- 状态 -->
-        <div class="mb-3">
-        <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
-        {{ form.status }}
-        {% for err in form.status.errors %}
-            <div class="text-danger small">{{ err }}</div>
-        {% endfor %}
-        </div>
-
-        <!-- 当前状态 -->
-        <div class="mb-3">
-        <label for="{{ form.current_status.id_for_label }}" class="form-label">{{ form.current_status.label }}</label>
-        {{ form.current_status }}
-        {% for err in form.current_status.errors %}
-            <div class="text-danger small">{{ err }}</div>
-        {% endfor %}
-        </div>
-
-        <!-- 个人信息 -->
-        <div class="mb-3">
-        <label for="{{ form.personal_info.id_for_label }}" class="form-label">{{ form.personal_info.label }}</label>
-        {{ form.personal_info }}
-        {% for err in form.personal_info.errors %}
-            <div class="text-danger small">{{ err }}</div>
-        {% endfor %}
-        </div>
-
-        <!-- 电话 -->
-        <div class="mb-3">
-        <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
-        {{ form.phone }}
-        {% for err in form.phone.errors %}
-            <div class="text-danger small">{{ err }}</div>
-        {% endfor %}
-        </div>
-
-        <!-- 邮箱 -->
-        <div class="mb-3">
-        <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
-        {{ form.email }}
-        {% for err in form.email.errors %}
-            <div class="text-danger small">{{ err }}</div>
-        {% endfor %}
-        </div>
-
-        <!-- 证书 -->
-        <div class="mb-3">
-        <label for="{{ form.certificates.id_for_label }}" class="form-label">{{ form.certificates.label }}</label>
-        {{ form.certificates }}
-        {% for err in form.certificates.errors %}
-            <div class="text-danger small">{{ err }}</div>
-        {% endfor %}
-        </div>
-
-        <!-- 自我评价 -->
-        <div class="mb-3">
-        <label for="{{ form.self_evaluation.id_for_label }}" class="form-label">{{ form.self_evaluation.label }}</label>
-        {{ form.self_evaluation }}
-        {% for err in form.self_evaluation.errors %}
-            <div class="text-danger small">{{ err }}</div>
-        {% endfor %}
-        </div>
-
-
-
-        <!-- 期待岗位 动态输入 -->
-        {% include "resumes/ListInput.html" with label="期望岗位" field=form.expected_positions items=resume.expected_positions id_prefix="positions"%}
-
-        <!-- 教育经历 动态输入 -->
-        {% include "resumes/ListInput.html" with label="教育经历" field=form.education items=resume.education id_prefix="education"%}
-
-        <!-- 技能 动态输入 -->
-        {% include "resumes/ListInput.html" with label="技能" field=form.skills items=resume.skills id_prefix="skills"%}
-
-        <!-- 项目经历 动态输入 -->
-        {% include "resumes/ListInput.html" with label="项目经历" field=form.project_experiences items=resume.project_experiences id_prefix="projects"%}
-
-        <!-- 工作经历 动态输入 -->
-        {% include "resumes/ListInput.html" with label="工作经历" field=form.working_experiences items=resume.working_experiences id_prefix="workings"%}
-
-        <!-- 当前状态，只展示 -->
-        <div class="mb-3">
-          <label class="form-label">当前状态</label>
-          <input type="text" class="form-control" value="{{ resume.current_status }}" readonly>
-        </div>
-
-        <!-- 标签，只展示 -->
-        <div class="mb-3">
-          <label class="form-label">标签</label>
-          <input type="text" class="form-control" value="{{ resume.tags|join:', ' }}" readonly>
-        </div>
-
-        <div class="d-flex justify-content-between">
-          <a href="{% url 'resume_list' %}" class="btn btn-outline-secondary">取消</a>
-          <button type="submit" class="btn btn-primary">保存</button>
-        </div>
-      </form>
-    </div>
-  </div>
 </div>
 
-<!-- 公共JS，动态列表输入 -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  // 动态输入组件初始化函数
-  function initDynamicList(idPrefix) {
-    const listDiv = document.getElementById(idPrefix + "-list");
-    const inputBox = document.getElementById(idPrefix + "-input");
-    const addBtn = document.getElementById(idPrefix + "-add-btn");
-    const hiddenField = document.getElementById("id_" + idPrefix);
-    const form = listDiv.closest("form");
+    document.addEventListener("DOMContentLoaded", function () {
+        function initStructuredInput(idPrefix, schema) {
+            const listDiv = document.getElementById(idPrefix + "-list");
+            const inputBox = document.getElementById(idPrefix + "-input");
+            const addBtn = document.getElementById(idPrefix + "-add-btn");
+            const hiddenField = document.getElementById("id_" + idPrefix);
+            const form = listDiv.closest("form");
 
-    function bindRemoveButtons() {
-      listDiv.querySelectorAll(".btn-remove").forEach(btn => {
-        btn.onclick = () => {
-          btn.parentElement.remove();
-          updateHiddenField();
+            const fieldNames = schema.split(",").map(s => s.trim());
+
+            function bindRemoveButtons() {
+                listDiv.querySelectorAll(".btn-remove").forEach(btn => {
+                    btn.onclick = () => {
+                        btn.parentElement.remove();
+                        updateHiddenField();
+                    };
+                });
+            }
+
+            function updateHiddenField() {
+                const entries = [...listDiv.querySelectorAll(".structured-entry")].map(group => {
+                    const fields = group.querySelectorAll("input");
+                    if (fields.length === 1) return fields[0].value.trim();
+                    const entry = {};
+                    fields.forEach((field, i) => {
+                        entry[fieldNames[i]] = field.value.trim();
+                    });
+                    return entry;
+                });
+                hiddenField.value = JSON.stringify(entries);
+            }
+
+            addBtn.onclick = () => {
+                const val = inputBox.value.trim();
+                if (!val) return;
+                const group = document.createElement("div");
+                group.className = "input-group mb-1 structured-entry";
+                if (fieldNames.length === 1) {
+                    group.innerHTML = `<input type="text" class="form-control" value="${val}" readonly>
+          <button type="button" class="btn btn-outline-danger btn-remove">×</button>`;
+                } else {
+                    const parts = val.split(",").map(s => s.trim());
+                    let fields = fieldNames.map((k, i) => `<input type="text" class="form-control" value="${parts[i] || ""}" placeholder="${k}">`).join("");
+                    group.innerHTML = `${fields}<button type="button" class="btn btn-outline-danger btn-remove">×</button>`;
+                }
+                listDiv.appendChild(group);
+                inputBox.value = "";
+                bindRemoveButtons();
+                updateHiddenField();
+            };
+
+            form.addEventListener("submit", () => {
+                updateHiddenField();
+            });
+
+            bindRemoveButtons();
+            updateHiddenField();
+        }
+
+        const schemas = {
+            education: "school,time,details",
+            skills: "text",
+            positions: "text",
+            projects: "project_name,employment_period,details",
+            workings: "company,employment_period,details",
         };
-      });
-    }
-    bindRemoveButtons();
-
-    function updateHiddenField() {
-      const items = [...listDiv.querySelectorAll(".dynamic-item")]
-        .map(input => input.value.trim())
-        .filter(v => v);
-      hiddenField.value = JSON.stringify(items);
-    }
-
-    addBtn.onclick = () => {
-      const val = inputBox.value.trim();
-      if (!val) return;
-      const div = document.createElement("div");
-      div.className = "input-group mb-1";
-      div.innerHTML = `
-        <input type="text" class="form-control dynamic-item" value="${val}" readonly>
-        <button type="button" class="btn btn-outline-danger btn-remove">×</button>
-      `;
-      listDiv.appendChild(div);
-      inputBox.value = "";
-      bindRemoveButtons();
-      updateHiddenField();
-    };
-
-    form.addEventListener("submit", () => {
-      updateHiddenField();
+        Object.entries(schemas).forEach(([prefix, schema]) => initStructuredInput(prefix, schema));
     });
-  }
-
-  ["education", "skills", "projects", "workings"].forEach(prefix => initDynamicList(prefix));
-});
 </script>
 {% endblock %}

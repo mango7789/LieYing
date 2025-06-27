@@ -1,5 +1,6 @@
 import json
 from django import forms
+from django.core.exceptions import ValidationError
 from .models import Resume
 
 
@@ -10,28 +11,56 @@ class ResumeForm(forms.ModelForm):
     working_experiences = forms.CharField(widget=forms.HiddenInput(), required=False)
     expected_positions = forms.CharField(widget=forms.HiddenInput(), required=False)
 
-    def clean_json_field(self, field_name):
-        data = self.cleaned_data.get(field_name, "[]")
-        # logging.debug(data)
+    def clean_json_field(self, field_name, required_keys=None, is_dict=False):
+        raw_data = self.cleaned_data.get(field_name, "[]")
         try:
-            return json.loads(data)
+            data = json.loads(raw_data)
         except Exception:
-            raise forms.ValidationError(f"{field_name} 格式错误")
+            raise ValidationError(f"{field_name} 字段不是合法的 JSON 格式")
+
+        if not isinstance(data, list):
+            raise ValidationError(f"{field_name} 应为数组结构")
+
+        if required_keys:
+            for idx, item in enumerate(data):
+                if not isinstance(item, dict):
+                    raise ValidationError(f"{field_name} 第 {idx+1} 项应为对象")
+                missing = [k for k in required_keys if k not in item]
+                if missing:
+                    raise ValidationError(
+                        f"{field_name} 第 {idx+1} 项缺少字段: {', '.join(missing)}"
+                    )
+        elif is_dict:
+            for idx, item in enumerate(data):
+                if not isinstance(item, str):
+                    raise ValidationError(f"{field_name} 第 {idx+1} 项应为字符串")
+        return data
 
     def clean_education(self):
-        return self.clean_json_field("education")
+        return self.clean_json_field(
+            "education", required_keys=["school", "time", "details"]
+        )
 
     def clean_skills(self):
-        return self.clean_json_field("skills")
+        return self.clean_json_field("skills", is_dict=True)
 
     def clean_project_experiences(self):
-        return self.clean_json_field("project_experiences")
+        return self.clean_json_field(
+            "project_experiences",
+            required_keys=["project_name", "employment_period"],
+        )
 
     def clean_working_experiences(self):
-        return self.clean_json_field("working_experiences")
+        return self.clean_json_field(
+            "working_experiences",
+            required_keys=["company", "employment_period", "job_name"],
+        )
 
     def clean_expected_positions(self):
-        return self.clean_json_field("expected_positions")
+        return self.clean_json_field(
+            "expected_positions",
+            required_keys=["position", "location", "salary"],
+        )
 
     class Meta:
         model = Resume
