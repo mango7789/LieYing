@@ -26,24 +26,24 @@ def job_list(request):
             return JsonResponse({"error": "参数解密失败"})
     else:
         params = {
-            "city": request.GET.get("city", "不限").strip(),
-            "work_years": request.GET.get("work_years", "不限").strip(),
-            "education": request.GET.get("education", "不限").strip(),
+            # "city": request.GET.get("city", "不限").strip(),
+            # "work_years": request.GET.get("work_years", "不限").strip(),
+            # "education": request.GET.get("education", "不限").strip(),
             "keyword": request.GET.get("keyword", "").strip(),
         }
 
     qs = JobPosition.objects.all().order_by("-id")
-    city = params["city"]
-    education = params["education"]
-    work_years = params["work_years"]
+    # city = params["city"]
+    # education = params["education"]
+    # work_years = params["work_years"]
     keyword = params["keyword"]
 
-    if city != "不限" and city:
-        qs = qs.filter(city__icontains=city)
-    if education != "不限" and education:
-        qs = qs.filter(education__icontains=education)
-    if work_years != "不限" and work_years:
-        qs = qs.filter(work_experience__icontains=work_years)
+    # if city != "不限" and city:
+    #     qs = qs.filter(city__icontains=city)
+    # if education != "不限" and education:
+    #     qs = qs.filter(education__icontains=education)
+    # if work_years != "不限" and work_years:
+    #     qs = qs.filter(work_experience__icontains=work_years)
     if keyword:
         qs = qs.filter(
             Q(name__icontains=keyword)
@@ -79,9 +79,11 @@ def job_list(request):
 
     return render(request, "jobs/List.html", context)
 
+
 @login_required
 def job_upload_page(request):
     return render(request, "jobs/Upload.html")
+
 
 @require_POST
 @login_required
@@ -93,7 +95,9 @@ def job_upload(request):
         filename = f.name
         ext = os.path.splitext(filename)[1].lower()
         if ext not in [".pdf", ".html", ".htm", ".xls", ".xlsx", ".csv"]:
-            result.append({"filename": filename, "status": "失败", "msg": "文件类型不支持"})
+            result.append(
+                {"filename": filename, "status": "失败", "msg": "文件类型不支持"}
+            )
             continue
         # 保存文件到 media/jobs_uploads/
         save_path = os.path.join("jobs_uploads", filename)
@@ -103,6 +107,7 @@ def job_upload(request):
         # TODO: 解析文件并入库
         result.append({"filename": filename, "status": "成功", "msg": "上传成功"})
     return JsonResponse({"result": result})
+
 
 @login_required
 def job_edit(request, job_id):

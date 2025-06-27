@@ -116,11 +116,22 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".nav-item.dropdown").forEach(function(dropdown) {
+    const allDropdowns = document.querySelectorAll(".nav-item.dropdown");
+
+    allDropdowns.forEach(function (dropdown) {
         const dropdownMenu = dropdown.querySelector(".dropdown-menu");
         let hideTimeout = null;
 
         dropdown.addEventListener("mouseenter", () => {
+            // 隐藏所有其他 dropdown 菜单
+            allDropdowns.forEach(function (otherDropdown) {
+                if (otherDropdown !== dropdown) {
+                    const otherMenu = otherDropdown.querySelector(".dropdown-menu");
+                    otherMenu.style.display = "none";
+                }
+            });
+
+            // 立即显示当前菜单
             clearTimeout(hideTimeout);
             dropdownMenu.style.display = "block";
         });
@@ -128,8 +139,18 @@ document.addEventListener("DOMContentLoaded", function () {
         dropdown.addEventListener("mouseleave", () => {
             hideTimeout = setTimeout(() => {
                 dropdownMenu.style.display = "none";
-            }, 500);
+            }, 300);
         });
+    });
+
+    // 点击空白区域时关闭所有 dropdown
+    document.addEventListener("click", function (event) {
+        if (!event.target.closest(".nav-item.dropdown")) {
+            document.querySelectorAll(".dropdown-menu").forEach(menu => {
+                menu.style.display = "none";
+            });
+        }
     });
 });
 </script>
+

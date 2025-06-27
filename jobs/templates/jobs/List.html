@@ -9,7 +9,7 @@
 
   <form method="get" id="filter-form" class="feature-card" onsubmit="return false;">
     <!-- 搜索框 -->
-    <div class="mb-3 text-start">
+    <div class="input-group input-group-sm">
       <input
         type="text"
         name="keyword"
@@ -18,10 +18,11 @@
         value="{{ keyword }}"
         aria-label="关键词搜索"
       >
+      <button class="btn btn-primary" type="submit">搜索</button>
     </div>
 
     <!-- 城市 -->
-    <div class="mb-3 text-start" role="group" aria-label="城市筛选">
+    <!-- <div class="mb-3 text-start" role="group" aria-label="城市筛选">
       <label class="form-label">城市</label>
       <div class="btn-group" role="group">
         {% for c in city %}
@@ -34,10 +35,10 @@
         {% endfor %}
       </div>
       <input type="hidden" name="city" id="city-input" value="{{ selected_city }}">
-    </div>
+    </div> -->
 
     <!-- 学历 -->
-    <div class="mb-3 text-start" role="group" aria-label="学历筛选">
+    <!-- <div class="mb-3 text-start" role="group" aria-label="学历筛选">
       <label class="form-label">教育</label>
       <div class="btn-group" role="group">
         {% for edu in education %}
@@ -50,10 +51,10 @@
         {% endfor %}
       </div>
       <input type="hidden" name="education" id="education-input" value="{{ selected_education }}">
-    </div>
+    </div> -->
 
     <!-- 工作年限 -->
-    <div class="mb-3 text-start" role="group" aria-label="工作年限筛选">
+    <!-- <div class="mb-3 text-start" role="group" aria-label="工作年限筛选">
       <label class="form-label">年限</label>
       <div class="btn-group" role="group">
         {% for wy in work_years %}
@@ -66,7 +67,7 @@
         {% endfor %}
       </div>
       <input type="hidden" name="work_years" id="workyears-input" value="{{ selected_working_y }}">
-    </div>
+    </div> -->
   </form>
 </section>
 

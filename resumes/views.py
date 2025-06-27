@@ -37,7 +37,11 @@ def resume_list(request):
             "keyword": request.GET.get("keyword", "").strip(),
         }
 
-    qs = Resume.objects.exclude(resume_id__isnull=True).exclude(resume_id="")
+    qs = (
+        Resume.objects.exclude(resume_id__isnull=True)
+        .exclude(resume_id="")
+        .order_by("-updated_at")
+    )
     city = params["city"]
     work_years = params["work_years"]
     education = params["education"]

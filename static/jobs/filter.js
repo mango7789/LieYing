@@ -8,9 +8,9 @@ document.addEventListener("DOMContentLoaded", () => {
   async function fetchFilteredJobs(page = 1) {
     const data = {
       keyword: form.querySelector("input[name='keyword']").value.trim(),
-      city: document.getElementById("city-input").value.trim(),
-      education: document.getElementById("education-input").value.trim(),
-      work_years: document.getElementById("workyears-input").value.trim(),
+      // city: document.getElementById("city-input").value.trim(),
+      // education: document.getElementById("education-input").value.trim(),
+      // work_years: document.getElementById("workyears-input").value.trim(),
     };
     try {
       const res = await fetch("/encrypt/", {
@@ -54,35 +54,35 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 城市筛选
-  document.querySelectorAll(".city-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.getElementById("city-input").value = btn.dataset.value;
-      document.querySelectorAll(".city-btn").forEach((b) => b.classList.replace("btn-primary", "btn-outline-primary"));
-      btn.classList.replace("btn-outline-primary", "btn-primary");
-      fetchFilteredJobs();
-    });
-  });
+  // // 城市筛选
+  // document.querySelectorAll(".city-btn").forEach((btn) => {
+  //   btn.addEventListener("click", () => {
+  //     document.getElementById("city-input").value = btn.dataset.value;
+  //     document.querySelectorAll(".city-btn").forEach((b) => b.classList.replace("btn-primary", "btn-outline-primary"));
+  //     btn.classList.replace("btn-outline-primary", "btn-primary");
+  //     fetchFilteredJobs();
+  //   });
+  // });
 
-  // 学历筛选
-  document.querySelectorAll(".edu-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.getElementById("education-input").value = btn.dataset.value;
-      document.querySelectorAll(".edu-btn").forEach((b) => b.classList.replace("btn-primary", "btn-outline-primary"));
-      btn.classList.replace("btn-outline-primary", "btn-primary");
-      fetchFilteredJobs();
-    });
-  });
+  // // 学历筛选
+  // document.querySelectorAll(".edu-btn").forEach((btn) => {
+  //   btn.addEventListener("click", () => {
+  //     document.getElementById("education-input").value = btn.dataset.value;
+  //     document.querySelectorAll(".edu-btn").forEach((b) => b.classList.replace("btn-primary", "btn-outline-primary"));
+  //     btn.classList.replace("btn-outline-primary", "btn-primary");
+  //     fetchFilteredJobs();
+  //   });
+  // });
 
-  // 年限筛选
-  document.querySelectorAll(".workyears-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.getElementById("workyears-input").value = btn.dataset.value;
-      document.querySelectorAll(".workyears-btn").forEach((b) => b.classList.replace("btn-primary", "btn-outline-primary"));
-      btn.classList.replace("btn-outline-primary", "btn-primary");
-      fetchFilteredJobs();
-    });
-  });
+  // // 年限筛选
+  // document.querySelectorAll(".workyears-btn").forEach((btn) => {
+  //   btn.addEventListener("click", () => {
+  //     document.getElementById("workyears-input").value = btn.dataset.value;
+  //     document.querySelectorAll(".workyears-btn").forEach((b) => b.classList.replace("btn-primary", "btn-outline-primary"));
+  //     btn.classList.replace("btn-outline-primary", "btn-primary");
+  //     fetchFilteredJobs();
+  //   });
+  // });
 
   // 关键词搜索
   form.querySelector("input[name='keyword']").addEventListener("keydown", (e) => {
