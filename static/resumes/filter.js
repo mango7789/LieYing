@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     // console.log(data);
     try {
-      const res = await fetch("/encrypt/", {
+      const res = await fetch("/core/encrypt/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -13,4 +13,5 @@ urlpatterns = [
         name="resume_detail",
     ),
     path("edit/<str:resume_id>/", resume_view.resume_edit, name="resume_edit"),
+    path("delete/<str:resume_id>/", resume_view.resume_delete, name="resume_delete"),
 ]

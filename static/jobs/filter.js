@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // work_years: document.getElementById("workyears-input").value.trim(),
     };
     try {
-      const res = await fetch("/encrypt/", {
+      const res = await fetch("/core/encrypt/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

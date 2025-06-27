@@ -24,11 +24,13 @@ urlpatterns = [
     # 超级管理员
     path("admin/", admin.site.urls),
     # 功能
-    path("encrypt/", include("core.urls")),
+    path("core/", include("core.urls")),
     # 用户/管理员 处理注册、登录、权限管理
     path("", include("users.urls")),
     # 简历模块
     path("resume/", include("resumes.urls")),
     # 工作模块
     path("job/", include("jobs.urls")),
+    # 打分（匹配）模块
+    path("match/", include("match.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

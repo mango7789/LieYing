@@ -16,6 +16,7 @@ from .forms import ResumeForm
 from .constants import *
 from .parser import Parser
 from core.utils.crypto import decrypt_params
+from core.decorators import admin_required
 
 resume_parser = Parser()
 
@@ -90,6 +91,7 @@ def resume_list(request):
         "selected_education": education,
         "selected_working_y": work_years,
         "filter_keyword": keyword,
+        "is_staff": request.user.is_staff,
     }
 
     # Ajax 异步更新简历表格
@@ -156,8 +158,6 @@ def resume_upload(request):
             }
         )
 
-    # TODO: 支持多文件上传，接入文件的解析
-
     filename = uploaded_file.name
 
     if not filename.lower().endswith(ALLOWED_EXTENSIONS):
@@ -184,6 +184,7 @@ def resume_upload(request):
     )
 
     # NOTE: 批量解析，不再需要用户进行确认
+    # TODO: 弹出小窗口展示解析结果
     try:
         resume_id, resume_dict = resume_parser.parse(full_path)
         logging.debug(f"解析结果：{resume_dict}")
@@ -276,3 +277,13 @@ def resume_detail(request, resume_id):
         "resume": resume,
     }
     return render(request, "resumes/Detail.html", context)
+
+
+@login_required
+@admin_required
+@require_POST
+def resume_delete(request, resume_id):
+    logging.debug(resume_id)
+    resume = get_object_or_404(Resume, resume_id=resume_id)
+    resume.delete()
+    return JsonResponse({"success": True})
