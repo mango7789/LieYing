@@ -30,8 +30,17 @@
                         </ul>
                     </li>
 
-                    <li class="nav-item">
-                        <a href="{% url 'job_list' %}" class="nav-link {% if request.path|first_path_segment == 'job' %}active{% endif %}">岗位库</a>
+                    <li class="nav-item dropdown">
+                        <a href="{% url 'job_list' %}" 
+                        class="nav-link {% if request.path|first_path_segment == 'job' %}active{% endif %}" 
+                        id="jobDropdown" 
+                        role="button">
+                            岗位库
+                        </a>
+                        <ul class="dropdown-menu custom-dropdown" aria-labelledby="jobDropdown">
+                            <li><a class="dropdown-item" href="{% url 'job_list' %}">岗位列表</a></li>
+                            <li><a class="dropdown-item" href="{% url 'job_upload_page' %}">上传岗位</a></li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link {% if request.path|first_path_segment == 'chat' %}active{% endif %}">沟通</a>
@@ -72,6 +81,8 @@
     border: none;
     border-radius: 0.5rem;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    white-space: nowrap; 
 }
 
 /* 样式不变：item 样式 */
@@ -81,6 +92,8 @@
     color: var(--dark-text);
     text-decoration: none;
     transition: background-color 0.2s ease, color 0.2s ease;
+    text-align: center;
+    white-space: nowrap; 
 }
 
 .dropdown-menu .dropdown-item:hover {
@@ -103,20 +116,20 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const dropdown = document.querySelector(".nav-item.dropdown");
-    const dropdownMenu = dropdown.querySelector(".dropdown-menu");
+    document.querySelectorAll(".nav-item.dropdown").forEach(function(dropdown) {
+        const dropdownMenu = dropdown.querySelector(".dropdown-menu");
+        let hideTimeout = null;
 
-    let hideTimeout = null;
+        dropdown.addEventListener("mouseenter", () => {
+            clearTimeout(hideTimeout);
+            dropdownMenu.style.display = "block";
+        });
 
-    dropdown.addEventListener("mouseenter", () => {
-        clearTimeout(hideTimeout);
-        dropdownMenu.style.display = "block";
-    });
-
-    dropdown.addEventListener("mouseleave", () => {
-        hideTimeout = setTimeout(() => {
-            dropdownMenu.style.display = "none";
-        }, 500);
+        dropdown.addEventListener("mouseleave", () => {
+            hideTimeout = setTimeout(() => {
+                dropdownMenu.style.display = "none";
+            }, 500);
+        });
     });
 });
 </script>

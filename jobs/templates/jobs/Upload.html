@@ -1,0 +1,59 @@
+{% extends "Layout.html" %}
+{% load static %}
+
+{% block content %}
+<section class="features">
+  <div class="section-title">
+    <h2>岗位信息上传</h2>
+  </div>
+
+  <div class="row justify-content-center mt-4" style="width: 100%;">
+    <div class="col-md-6">
+      <!-- 上传表单 -->
+      <form id="job-upload-form" method="post" action="{% url 'job_upload' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- 上传区域 -->
+        <div id="job-upload-area" class="border border-primary rounded p-4 text-center mb-3" style="cursor: pointer;">
+          <i class="bi bi-upload" style="font-size: 2rem;"></i>
+          <p id="job-upload-hint" class="mt-2 mb-0 text-muted">
+            点击上传岗位信息文件<br>
+            <small>支持 PDF / Excel / HTML</small>
+          </p>
+        </div>
+
+        <!-- 隐藏文件输入 -->
+        <input type="file" name="files" id="job-file-input" accept=".pdf,.html,.htm,.xls,.xlsx,.csv" multiple hidden>
+
+        <!-- 选中的文件列表 -->
+        <ul id="job-file-list" class="list-group mb-3"></ul>
+
+        <!-- 确认上传按钮 -->
+        <div class="text-center">
+          <button type="submit" id="job-confirm-upload" class="btn btn-success" disabled>确认上传</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 上传结果表格 -->
+  <div id="job-upload-result" class="d-none">
+    <h5>上传结果</h5>
+    <table class="table table-bordered table-sm">
+      <thead>
+        <tr>
+          <th>文件名</th>
+          <th>状态</th>
+          <th>消息</th>
+        </tr>
+      </thead>
+      <tbody id="job-upload-result-body">
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'jobs/upload.js' %}"></script>
+{% endblock %}

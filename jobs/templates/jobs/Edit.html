@@ -1,0 +1,61 @@
+{% extends "Layout.html" %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+  <h2>编辑岗位信息</h2>
+  <form method="post" class="mt-3" style="max-width: 600px;">
+    {% csrf_token %}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    <div class="mb-3">
+      <label class="form-label">岗位名称</label>
+      <input type="text" name="name" class="form-control" value="{{ job.name }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">公司</label>
+      <input type="text" name="company" class="form-control" value="{{ job.company }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">城市</label>
+      <select name="city" class="form-select" required>
+        {% for c in city_choices %}
+          <option value="{{ c }}" {% if job.city == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">薪资</label>
+      <input type="text" name="salary" class="form-control" value="{{ job.salary }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">学历要求</label>
+      <select name="education" class="form-select">
+        {% for edu in education_choices %}
+          <option value="{{ edu }}" {% if job.education == edu %}selected{% endif %}>{{ edu }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">工作年限</label>
+      <select name="work_years" class="form-select">
+        {% for wy in working_years_choices %}
+          <option value="{{ wy }}" {% if job.work_years == wy %}selected{% endif %}>{{ wy }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">岗位职责</label>
+      <textarea name="responsibilities" class="form-control" rows="3">{{ job.responsibilities }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">岗位要求</label>
+      <textarea name="requirements" class="form-control" rows="3">{{ job.requirements }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">保存修改</button>
+    <a href="{% url 'job_list' %}" class="btn btn-secondary ms-2">返回列表</a>
+  </form>
+</div>
+{% endblock %}
