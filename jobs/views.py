@@ -10,6 +10,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.conf import settings
 
 from .models import JobPosition, JobOwner
+from .forms import JobForm
 from .constants import *
 from core.utils.crypto import decrypt_params
 import os
@@ -32,7 +33,7 @@ def job_list(request):
             "keyword": request.GET.get("keyword", "").strip(),
         }
 
-    qs = JobPosition.objects.all().order_by("-id")
+    qs = JobPosition.objects.all().order_by("-updated_at")
     # city = params["city"]
     # education = params["education"]
     # work_years = params["work_years"]
@@ -80,80 +81,40 @@ def job_list(request):
     return render(request, "jobs/List.html", context)
 
 
-@login_required
-def job_upload_page(request):
-    return render(request, "jobs/Upload.html")
 
-
-@require_POST
 @login_required
-def job_upload(request):
+def job_add(request):
     if request.method == "POST":
-        name = request.POST.get("name", "").strip()
-        company = request.POST.get("company", "").strip()
-        city = request.POST.get("city", "").strip()
-        salary = request.POST.get("salary", "").strip()
-        work_experience = request.POST.get("work_experience", "").strip()
-        education = request.POST.get("education", "").strip()
-        language = request.POST.get("language", "").strip()
-        responsibilities = request.POST.get("responsibilities", "").strip()
-        requirements = request.POST.get("requirements", "").strip()
-
-        # 简单校验
-        if not name or not company or not city:
-            messages.error(request, "岗位名称、企业名称、工作地点为必填项")
-            return render(request, "jobs/Upload.html")
-        # 创建岗位
-        JobPosition.objects.create(
-            name=name,
-            company=company,
-            city=city,
-            salary=salary,
-            work_experience=work_experience,
-            education=education,
-            language=language,
-            responsibilities=responsibilities,
-            requirements=requirements,
-        )
-        messages.success(request, "岗位信息已成功添加！")
-        return redirect("job_upload_page")
+        form = JobForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "岗位信息已成功添加！")
+            return redirect("job_list")
+        else:
+            messages.error(request, "请检查表单内容")
     else:
-        return redirect("job_upload_page")
+        form = JobForm()
+
+    return render(request, "jobs/Upload.html", {"form": form})
 
 
 @login_required
 def job_edit(request, job_id):
     job = get_object_or_404(JobPosition, id=job_id)
-    if request.method == "POST":
-        name = request.POST.get("name", "").strip()
-        company = request.POST.get("company", "").strip()
-        city = request.POST.get("city", "").strip()
-        salary = request.POST.get("salary", "").strip()
-        education = request.POST.get("education", "").strip()
-        work_years = request.POST.get("work_years", "").strip()
-        responsibilities = request.POST.get("responsibilities", "").strip()
-        requirements = request.POST.get("requirements", "").strip()
 
-        # 简单校验
-        if not name or not company or not city:
-            messages.error(request, "岗位名称、公司、城市为必填项")
-        else:
-            job.name = name
-            job.company = company
-            job.city = city
-            job.salary = salary
-            job.education = education
-            job.work_years = work_years
-            job.responsibilities = responsibilities
-            job.requirements = requirements
-            job.save()
+    if request.method == "POST":
+        form = JobForm(request.POST, instance=job)
+        if form.is_valid():
+            form.save()
             messages.success(request, "岗位信息已更新")
             return redirect("job_list")
+        else:
+            messages.error(request, "请检查表单内容")
+    else:
+        form = JobForm(instance=job)
 
     context = {
+        "form": form,
         "job": job,
-        "city_choices": CITY,
-        "education_choices": EDUCATION,
-        "working_years_choices": WORK_YEARS,
     }
     return render(request, "jobs/Edit.html", context)

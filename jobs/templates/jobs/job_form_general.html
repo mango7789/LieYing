@@ -1,0 +1,172 @@
+{% extends "Layout.html" %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h3 class="mb-0">
+                <i class="bi bi-plus-circle me-2"></i>新增职位
+            </h3>
+            <p class="text-muted mb-0">创建新职位，系统将自动添加到对应公司</p>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- 公司名称 -->
+                <div class="mb-3">
+                    <label class="form-label">公司名称*</label>
+                    {{ form.company }}
+                    {% for error in form.company.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 工作地点 - 带下拉和自定义 -->
+                <div class="mb-3">
+                    <label class="form-label">工作地点*</label>
+                    {{ form.city }}
+                    <div class="mt-2">
+                        {{ form.custom_city }}
+                    </div>
+                    {% for error in form.city.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                    {% for error in form.custom_city.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 表单错误提示 -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <!-- 左侧列 -->
+                    <div class="col-md-6">
+                        <!-- 岗位名称 -->
+                        <div class="mb-3">
+                            <label class="form-label">岗位名称*</label>
+                            {{ form.name }}
+                            {% for error in form.name.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- 薪资范围 -->
+                        <div class="mb-3">
+                            <label class="form-label">薪资范围</label>
+                            {{ form.salary }}
+                            {% for error in form.salary.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- 右侧列 -->
+                    <div class="col-md-6">
+                        <!-- 工作年限 -->
+                        <div class="mb-3">
+                            <label class="form-label">工作年限</label>
+                            {{ form.work_experience }}
+                            {% for error in form.work_experience.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- 学历要求 -->
+                        <div class="mb-3">
+                            <label class="form-label">学历要求</label>
+                            {{ form.education }}
+                            {% for error in form.education.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- 语言要求 -->
+                        <div class="mb-3">
+                            <label class="form-label">语言要求</label>
+                            {{ form.language }}
+                            {% for error in form.language.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 岗位职责 -->
+                <div class="mb-3">
+                    <label class="form-label">岗位职责</label>
+                    {{ form.responsibilities }}
+                    <div class="form-text">每条职责请用换行分隔</div>
+                    {% for error in form.responsibilities.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- 岗位要求 -->
+                <div class="mb-3">
+                    <label class="form-label">岗位要求</label>
+                    {{ form.requirements }}
+                    <div class="form-text">每条要求请用换行分隔</div>
+                    {% for error in form.requirements.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'jobs:company_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>返回公司列表
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>创建职位
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-success">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<script>
+    // 城市选择处理逻辑
+    function checkCityCustom(select) {
+        const customInput = document.getElementById('custom-city-input');
+        const parentDiv = customInput.parentElement;
+
+        if (select.value === '其他') {
+            parentDiv.classList.remove('d-none');
+            customInput.required = true;
+        } else {
+            parentDiv.classList.add('d-none');
+            customInput.required = false;
+            customInput.value = '';
+        }
+    }
+
+    // 页面加载时初始化城市选择
+    document.addEventListener('DOMContentLoaded', function () {
+        const citySelect = document.querySelector('select[name="city"]');
+        if (citySelect) {
+            checkCityCustom(citySelect);
+        }
+    });
+</script>
+
+<style>
+    /* 自定义城市输入框样式 */
+    #custom-city-input {
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}

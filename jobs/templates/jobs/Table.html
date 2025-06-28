@@ -1,5 +1,5 @@
-<table class="table table-striped">
-    <thead class="pretty-thead-row">
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
         <tr>
             <th>招聘企业</th>
             <th>职位</th>
@@ -18,9 +18,10 @@
             <td>{{ job.city }}</td>
             <td>{{ job.work_experience|default:"-" }}</td>
             <td>{{ job.education }}</td>
-            <td>{{ job.created_at }}</td>
+            <td>{{ job.updated_at }}</td>
             <td>
                  <a href="{% url 'job_edit' job.id %}" class="btn btn-sm btn-outline-primary" style="padding: 0.1rem 0.7rem; font-size: 0.85rem;">编辑</a>
+                 <a href="{% url 'job_edit' job.id %}" class="btn btn-sm btn-outline-success" style="padding: 0.1rem 0.7rem; font-size: 0.85rem;">打分</a>
             </td>
         </tr>
         {% empty %}

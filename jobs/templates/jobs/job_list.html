@@ -1,0 +1,126 @@
+{% extends "Layout.html" %}
+
+{% block content %}
+<section class="features">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="section-title">
+            <h2>{{ company }} - 在招职位</h2>
+            <p class="text-muted">共 {{ jobs|length }} 个职位</p>
+        </div>
+        <a href="{% url 'jobs:job_create' company=company %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> 新增职位
+        </a>
+    </div>
+
+    {% if jobs %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>岗位名称</th>
+                    <th>工作地点</th>
+                    <th>薪资范围</th>
+                    <th>创建时间</th>
+                    <th>匹配状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>{{ job.name }}</td>
+                    <td>{{ job.city }}</td>
+                    <td>{{ job.salary|default:"面议" }}</td>
+                    <td>{{ job.created_at|date:"Y-m-d" }}</td>
+                    <td>
+                        {% if job.match_status == 'matched' %}
+                        <span class="badge bg-success">已匹配</span>
+                        {% elif job.match_status == 'matching' %}
+                        <span class="badge bg-warning text-dark">匹配中</span>
+                        {% else %}
+                        <span class="badge bg-secondary">未匹配</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <!-- 开始匹配按钮 -->
+                            {% if job.match_status != 'matching' and job.match_status != 'matched' %}
+                            <form method="post" action="{% url 'jobs:start_matching' job.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-play-fill me-1"></i>开始匹配
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <!-- 查看结果按钮 -->
+                            {% if job.match_status == 'matched' %}
+                            <a href="{% url 'jobs:match_result' job.id %}" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-eye me-1"></i>查看结果
+                            </a>
+                            {% endif %}
+
+                            <!-- 编辑按钮 -->
+                            <a href="{% url 'jobs:job_update' job.id %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil me-1"></i>编辑
+                            </a>
+
+                            <!-- 删除按钮 -->
+                            <button class="btn btn-sm btn-outline-danger delete-job-btn" data-job-id="{{ job.id }}">
+                                <i class="bi bi-trash me-1"></i>删除
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle me-2"></i>暂无职位信息，请点击"新增职位"按钮创建
+    </div>
+    {% endif %}
+</section>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteJobModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除该职位吗？此操作不可恢复。</p>
+                <p class="fw-bold" id="jobNamePreview"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form id="deleteJobForm" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 删除职位确认
+    document.querySelectorAll('.delete-job-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const jobId = this.dataset.jobId;
+            const jobName = this.closest('tr').querySelector('td:first-child').textContent;
+
+            document.getElementById('jobNamePreview').textContent = `职位名称: ${jobName}`;
+
+            const form = document.getElementById('deleteJobForm');
+            form.action = `/jobs/delete/${jobId}/`;
+
+            const modal = new bootstrap.Modal(document.getElementById('deleteJobModal'));
+            modal.show();
+        });
+    });
+</script>
+{% endblock %}

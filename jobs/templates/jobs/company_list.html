@@ -1,0 +1,54 @@
+{% extends "Layout.html" %}
+
+{% block content %}
+<section class="features">
+    <div class="section-title d-flex justify-content-between align-items-center">
+        <div>
+            <h2>公司列表</h2>
+            <p class="text-muted">按公司分组查看在招职位</p>
+        </div>
+        <a href="{% url 'jobs:job_create_general' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> 新增岗位
+        </a>
+    </div>
+
+    {% if companies %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>公司名称</th>
+                    <th>在招职位数量</th>
+                    <th>最近创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for company in companies %}
+                    {% if company.company %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'jobs:job_list' company=company.company %}">
+                                {{ company.company }}
+                            </a>
+                        </td>
+                        <td>{{ company.job_count }}</td>
+                        <td>{{ company.latest_created|date:"Y-m-d" }}</td>
+                        <td>
+                            <a href="{% url 'jobs:job_list' company=company.company %}" class="btn btn-sm btn-outline-primary">
+                                查看职位
+                            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle me-2"></i>暂无公司数据，请先添加职位
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

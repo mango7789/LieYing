@@ -1,0 +1,123 @@
+{% extends "Layout.html" %}
+
+{% block content %}
+<section class="features">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="section-title">
+            <h2>匹配结果</h2>
+            <p class="text-muted">{{ job.name }} - {{ job.company }}</p>
+        </div>
+        <a href="{% url 'jobs:job_list' company=job.company %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>返回职位列表
+        </a>
+    </div>
+
+    <!-- 职位信息卡片 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>职位信息</h5>
+                    <p><strong>职位名称：</strong>{{ job.name }}</p>
+                    <p><strong>公司：</strong>{{ job.company }}</p>
+                    <p><strong>工作地点：</strong>{{ job.city }}</p>
+                    <p><strong>薪资：</strong>{{ job.salary|default:"面议" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>要求信息</h5>
+                    <p><strong>学历要求：</strong>{{ job.education|default:"不限" }}</p>
+                    <p><strong>工作年限：</strong>{{ job.work_experience|default:"不限" }}</p>
+                    <p><strong>语言要求：</strong>{{ job.language|default:"不限" }}</p>
+                    <p><strong>创建时间：</strong>{{ job.created_at|date:"Y-m-d H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 匹配结果列表 -->
+    {% if resumes %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-people me-2"></i>匹配候选人 ({{ resumes|length }}人)
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>排名</th>
+                            <th>候选人姓名</th>
+                            <th>匹配度</th>
+                            <th>当前状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for resume in resumes %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">{{ forloop.counter }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ resume.name }}</strong>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress me-2" style="width: 100px; height: 8px;">
+                                        <div class="progress-bar bg-success" 
+                                             style="width: {{ resume.match_score }}%"></div>
+                                    </div>
+                                    <span class="fw-bold">{{ resume.match_score }}%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ resume.status }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="#" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>查看简历
+                                    </a>
+                                    <a href="#" class="btn btn-outline-success">
+                                        <i class="bi bi-telephone me-1"></i>联系候选人
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle me-2"></i>
+        暂无匹配结果，请稍后再试或检查简历库是否有合适的候选人
+    </div>
+    {% endif %}
+
+    <!-- 重新匹配按钮 -->
+    <div class="text-center mt-4">
+        <form method="post" action="{% url 'jobs:start_matching' job.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-arrow-clockwise me-1"></i>重新匹配
+            </button>
+        </form>
+    </div>
+</section>
+
+{% if messages %}
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %} 

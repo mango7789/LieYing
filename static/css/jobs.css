@@ -1,0 +1,265 @@
+/* jobs.css - 岗位管理专用样式 */
+.company-table th, .company-table td {
+  vertical-align: middle;
+}
+.job-table th, .job-table td {
+  vertical-align: middle;
+}
+.job-status-badge {
+  font-size: 0.95em;
+  padding: 0.2em 0.7em;
+  border-radius: 0.8em;
+}
+.job-status-not-started { background: #f0ad4e; color: #fff; }
+.job-status-matching { background: #5bc0de; color: #fff; }
+.job-status-matched { background: #5cb85c; color: #fff; }
+
+/* 弹窗表单样式 */
+.modal .form-label { font-weight: bold; }
+.modal .form-select, .modal .form-control { margin-bottom: 1em; }
+
+/* 删除确认按钮 */
+.delete-confirm-btn { color: #fff; background: #d9534f; border: none; }
+.delete-confirm-btn:hover { background: #c9302c; }
+
+/* Jobs模块专用样式 */
+
+/* 公司列表样式 */
+.company-table {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.company-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.company-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+/* 职位列表样式 */
+.job-status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.job-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.job-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* 匹配进度条样式 */
+.match-progress {
+    width: 100px;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.match-progress .progress-bar {
+    transition: width 0.3s ease;
+}
+
+/* 表单样式优化 */
+.form-select:focus,
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* 自定义城市输入框动画 */
+#custom-city-input {
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+#custom-city-input.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 卡片样式 */
+.feature-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* 匹配结果表格样式 */
+.match-result-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.match-result-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* 排名徽章样式 */
+.rank-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 2rem;
+    text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .job-actions {
+        flex-direction: column;
+    }
+    
+    .job-actions .btn {
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* 加载动画 */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0d6efd;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 成功/错误消息样式 */
+.alert {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert-success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+/* 模态框样式优化 */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    border-radius: 0 0 12px 12px;
+}
+
+/* 按钮样式优化 */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.btn-outline-primary {
+    color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* 表格样式优化 */
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+/* 分页样式 */
+.pagination {
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.page-link {
+    border: none;
+    color: #0d6efd;
+    padding: 0.5rem 0.75rem;
+    margin: 0 0.125rem;
+    border-radius: 4px;
+}
+
+.page-link:hover {
+    background-color: #e9ecef;
+    color: #0d6efd;
+}
+
+.page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
