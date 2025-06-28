@@ -33,4 +33,7 @@ urlpatterns = [
     path("job/", include("jobs.urls")),
     # 打分（匹配）模块
     path("match/", include("match.urls")),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
