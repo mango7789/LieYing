@@ -15,6 +15,7 @@ class JobPosition(models.Model):
     responsibilities = models.TextField("岗位职责", blank=True)
     requirements = models.TextField("岗位要求", blank=True)
     created_at = models.DateTimeField("创建时间", auto_now_add=True)
+    updated_at = models.DateTimeField("更新时间", auto_now=True)
 
     class Meta:
         verbose_name = "岗位"

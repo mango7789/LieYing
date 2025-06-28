@@ -42,8 +42,16 @@ class ResumeJobMatcher:
             job.get("responsibilities", [])
         )
         resume_skills = ", ".join(resume.get("skills", []))
-        education = resume.get("education", ["未知"])[0]
+
+        # NOTE: 仅考虑最高学历?
+        education_list = resume.get("education", [])
+        education = education_list[0] if education_list else "未知"
+
+        # TODO: 在 prompt 中加入具体的工作/项目经历
         experience = f"工作经验: {len(resume.get('work_experience', []))}段, 项目经验: {len(resume.get('project_experience', []))}段"
+
+        # TODO: 加入城市、教育背景、语言能力的筛选条件，提前筛掉不符合硬性条件的候选人，避免
+        #       直接调用 API
 
         # 构建强引导提示词
         prompt = f"""
@@ -60,7 +68,7 @@ class ResumeJobMatcher:
         - 技能: {resume_skills}
         - 求职状态: {resume.get("status", "未知")}
         - 经验: {experience}
-        - 薪资期望: {", ".join(resume.get("expectation", ["未知"]))}
+        - 期望岗位: {resume.get("expectation", ["未知"])}
 
         ### 评估要求
         1. 匹配度评分（0-10分，需说明理由）

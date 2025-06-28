@@ -53,7 +53,14 @@ class ResumeForm(forms.ModelForm):
     def clean_working_experiences(self):
         return self.clean_json_field(
             "working_experiences",
-            required_keys=["company", "employment_period", "job_name"],
+            required_keys=[
+                "company",
+                "employment_period",
+                # "all_tags",
+                "job_name",
+                # "department",
+                # "responsibilities",
+            ],
         )
 
     def clean_expected_positions(self):

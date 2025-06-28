@@ -10,7 +10,11 @@ from typing import Dict, Final
 import fitz
 from .models import Resume
 import pdfplumber
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 class Parser:
     def __init__(self):
@@ -75,7 +79,7 @@ class Parser:
                 filtered = [s for s in strings if s]
                 personal_info.append(" ".join(filtered))
             data_dict["personal_info"] = " | ".join(personal_info)
-            
+
             # 提取求职意向
             expected_positions = []
             job_intention_div = soup.select_one('h3:contains("求职意向") + div.tabs')
@@ -232,12 +236,12 @@ class Parser:
 
     def _parse_pdf(self, pdf_path: str) -> Dict:
         # 联系人信息正则表达式
-        phone_pattern = re.compile(r'\d{3}[-.\s]?\d{3}[-.\s]?\d{4}')
-        email_pattern = re.compile(r'[\w\.-]+@[\w\.-]+\.\w+')
-        
+        phone_pattern = re.compile(r"\d{3}[-.\s]?\d{3}[-.\s]?\d{4}")
+        email_pattern = re.compile(r"[\w\.-]+@[\w\.-]+\.\w+")
+
         # 最终结果容器 - 扩展为包含所有字段
         result = {
-            "resume_id": os.path.basename(pdf_path).split('.')[0],
+            "resume_id": os.path.basename(pdf_path).split(".")[0],
             "name": "",
             "phone": "",
             "email": "",
@@ -253,9 +257,9 @@ class Parser:
             "languages": [],
             "self_assessment": "",
         }
-        
+
         all_text = ""
-        
+
         try:
             with pdfplumber.open(pdf_path) as pdf:
                 # 提取所有文本，保留页面结构信息
@@ -265,172 +269,227 @@ class Parser:
                         # 添加页码标记，帮助保留页面边界
                         text = f"--- Page {page.page_number} ---\n{text}\n--- Page End ---\n"
                         all_text += text
-            
+
             # 提取各部分内容
             sections = self.extract_sections(all_text)
-            
+
             # 调试：输出各部分的概要
             for key, value in sections.items():
                 logging.info(f"Section: {key}, content length: {len(value)} characters")
-            
+
             # 提取联系人信息 - 使用原始代码中的全局搜索逻辑
             phones = phone_pattern.findall(all_text)
             emails = email_pattern.findall(all_text)
             result["phone"] = list(set(phones))
             result["email"] = list(set(emails))
-            
+
             print(result)
             # 解析个人信息
             if sections["personal_info"]:
                 contact_info = sections["personal_info"]
-                
+
                 # 1. 提取姓名
                 if sections["name"]:
                     # 尝试提取姓名标签后的内容
-                    name_match = re.search(r'(?:姓名|名字|Name)[:：\s]*(.+)', sections["name"], re.IGNORECASE)
+                    name_match = re.search(
+                        r"(?:姓名|名字|Name)[:：\s]*(.+)",
+                        sections["name"],
+                        re.IGNORECASE,
+                    )
                     if name_match:
                         result["name"] = name_match.group(1).strip()
                         # 保留个人信息但不包含姓名
                         contact_info = contact_info.replace(name_match.group(0), "")
                     else:
                         # 如果没有标签，尝试取第一行不含数字的内容
-                        first_line = sections["name"].split('\n')[0].strip()
-                        if first_line and not any(char.isdigit() for char in first_line):
+                        first_line = sections["name"].split("\n")[0].strip()
+                        if first_line and not any(
+                            char.isdigit() for char in first_line
+                        ):
                             result["name"] = first_line
-                
+
                 # 如果没有在name部分找到，尝试从个人信息中提取
                 if not result["name"]:
-                    name_match = re.search(r'(?:姓名|名字|Name)[:：\s]*(.+)', contact_info, re.IGNORECASE)
+                    name_match = re.search(
+                        r"(?:姓名|名字|Name)[:：\s]*(.+)", contact_info, re.IGNORECASE
+                    )
                     if name_match:
                         result["name"] = name_match.group(1).strip()
                         contact_info = contact_info.replace(name_match.group(0), "")
-                
+
                 # 提取GitHub链接
-                github_match = re.search(r'github\.com/[\w-]+', contact_info)
+                github_match = re.search(r"github\.com/[\w-]+", contact_info)
                 if github_match:
                     result["github"] = "https://" + github_match.group()
-                
+
                 # 提取领英链接
-                linkedin_match = re.search(r'linkedin\.com/in/[\w-]+', contact_info)
+                linkedin_match = re.search(r"linkedin\.com/in/[\w-]+", contact_info)
                 if linkedin_match:
                     result["linkedin"] = "https://" + linkedin_match.group()
-                
+
                 # 将剩余信息存入information字段
                 result["information"] = contact_info.strip()
-            
+
             # 解析求职意向（如果个人信息中包含）
             if "求职意向" in all_text or "Career Objective" in all_text:
-                match = re.search(r'(?:求职意向|期望职位|Career Objective)[:：](.*?)(?:\n|$)', all_text, re.IGNORECASE)
+                match = re.search(
+                    r"(?:求职意向|期望职位|Career Objective)[:：](.*?)(?:\n|$)",
+                    all_text,
+                    re.IGNORECASE,
+                )
                 if match:
                     result["expectation"] = match.group(1).strip()
-            
+
             # 解析教育经历
             if sections["education"]:
                 # 尝试分割多条教育经历
-                edu_items = re.split(r'(?<=\d{4}[./年])\s*(?:[-~至]\s*)?(?=\d{4})|(?<=至今)\s|●', sections["education"])
+                edu_items = re.split(
+                    r"(?<=\d{4}[./年])\s*(?:[-~至]\s*)?(?=\d{4})|(?<=至今)\s|●",
+                    sections["education"],
+                )
                 for item in edu_items:
                     if item.strip():
                         # 尝试提取学校名称和时间
-                        school_match = re.search(r'(.+?大学|.+?学院|.+?学校|.+\bUniversity|.+\bCollege)', item)
-                        time_match = re.search(r'(\d{4}[-./年]\s*[-\~至]?\s*\d{4}[-./年]?|\d{4}年\d{1,2}月[\s至-]+\d{4}年\d{1,2}月)', item)
-                        
+                        school_match = re.search(
+                            r"(.+?大学|.+?学院|.+?学校|.+\bUniversity|.+\bCollege)",
+                            item,
+                        )
+                        time_match = re.search(
+                            r"(\d{4}[-./年]\s*[-\~至]?\s*\d{4}[-./年]?|\d{4}年\d{1,2}月[\s至-]+\d{4}年\d{1,2}月)",
+                            item,
+                        )
+
                         edu_entry = {
                             "school": school_match.group(0) if school_match else "",
                             "time": time_match.group(0) if time_match else "",
-                            "details": item.strip()
+                            "details": item.strip(),
                         }
                         result["education"].append(edu_entry)
-            
+
             # 解析工作经历
             if sections["work_experience"]:
                 # 尝试分割多条工作经历
-                work_items = re.split(r'(?<=\d{4}[./年])\s*(?:[-~至]\s*)?(?=\d{4})|(?<=至今)\s|●|◆|\d{4}[年./]\d{1,2}月', sections["work_experience"])
+                work_items = re.split(
+                    r"(?<=\d{4}[./年])\s*(?:[-~至]\s*)?(?=\d{4})|(?<=至今)\s|●|◆|\d{4}[年./]\d{1,2}月",
+                    sections["work_experience"],
+                )
                 for item in work_items:
                     if item.strip():
                         # 尝试提取公司名称和时间
-                        company_match = re.search(r'(.+?公司|.+?科技|.+?集团|.+\bCo\.|.+\bInc\.|.+\bLtd\.)', item)
-                        time_match = re.search(r'(\d{4}[./年]\s*[-\~至]?\s*\d{4}[./年]?|至今|\d{4}[-./年]\d{1,2}月)', item)
-                        
+                        company_match = re.search(
+                            r"(.+?公司|.+?科技|.+?集团|.+\bCo\.|.+\bInc\.|.+\bLtd\.)",
+                            item,
+                        )
+                        time_match = re.search(
+                            r"(\d{4}[./年]\s*[-\~至]?\s*\d{4}[./年]?|至今|\d{4}[-./年]\d{1,2}月)",
+                            item,
+                        )
+
                         work_entry = {
                             "company": company_match.group(0) if company_match else "",
-                            "employment_period": time_match.group(0) if time_match else "",
-                            "details": item.strip()
+                            "employment_period": (
+                                time_match.group(0) if time_match else ""
+                            ),
+                            "details": item.strip(),
                         }
                         result["work_experience"].append(work_entry)
-            
+
             # 解析项目经历
             if sections["project_experience"]:
                 # 分割多个项目
-                project_items = re.split(r'\n(?=\d{4}|项目名称|项目\d+[.:：]|\d+[-.] )', sections["project_experience"])
+                project_items = re.split(
+                    r"\n(?=\d{4}|项目名称|项目\d+[.:：]|\d+[-.] )",
+                    sections["project_experience"],
+                )
                 for item in project_items:
                     if item.strip():
                         # 尝试提取项目名称和时间
-                        name_match = re.search(r'(项目名称|项目名称|项目|Project)[:：]?\s*(.+)', item)
-                        time_match = re.search(r'(\d{4}[./年]\s*[-\~至]?\s*\d{4}[./年]?|\d{4}/\d{1,2}[-~]\d{4}/\d{1,2})', item)
-                        
+                        name_match = re.search(
+                            r"(项目名称|项目名称|项目|Project)[:：]?\s*(.+)", item
+                        )
+                        time_match = re.search(
+                            r"(\d{4}[./年]\s*[-\~至]?\s*\d{4}[./年]?|\d{4}/\d{1,2}[-~]\d{4}/\d{1,2})",
+                            item,
+                        )
+
                         project_entry = {
-                            "project_name": name_match.group(2).strip() if name_match else "",
+                            "project_name": (
+                                name_match.group(2).strip() if name_match else ""
+                            ),
                             "time": time_match.group(0) if time_match else "",
-                            "details": item.strip()
+                            "details": item.strip(),
                         }
                         result["project_experience"].append(project_entry)
-            
+
             # 解析专业技能
             if sections["skills"]:
                 # 分割技能列表 - 支持多种分隔符
-                skills = re.split(r'[,;、，；]|(?:\n\s*[-●•])', sections["skills"])
+                skills = re.split(r"[,;、，；]|(?:\n\s*[-●•])", sections["skills"])
                 # 过滤空项和短项
-                result["skills"] = [skill.strip() for skill in skills if len(skill.strip()) > 2]
-                
+                result["skills"] = [
+                    skill.strip() for skill in skills if len(skill.strip()) > 2
+                ]
+
                 # 如果没有分割出有效技能，尝试逐行处理
                 if not result["skills"]:
-                    result["skills"] = [line.strip() for line in sections["skills"].split('\n') if line.strip()]
-            
+                    result["skills"] = [
+                        line.strip()
+                        for line in sections["skills"].split("\n")
+                        if line.strip()
+                    ]
+
             # 解析证书
             if sections["certificates"]:
                 # 分割证书列表 - 支持多种分隔符
-                certs = re.split(r'[,;、，；]|(?:\n\s*[-●•])', sections["certificates"])
+                certs = re.split(r"[,;、，；]|(?:\n\s*[-●•])", sections["certificates"])
                 # 过滤空项和短项
-                result["certificates"] = [cert.strip() for cert in certs if len(cert.strip()) > 2]
-                
+                result["certificates"] = [
+                    cert.strip() for cert in certs if len(cert.strip()) > 2
+                ]
+
                 # 如果没有分割出有效证书，尝试逐行处理
                 if not result["certificates"]:
-                    result["certificates"] = [line.strip() for line in sections["certificates"].split('\n') if line.strip()]
-            
+                    result["certificates"] = [
+                        line.strip()
+                        for line in sections["certificates"].split("\n")
+                        if line.strip()
+                    ]
+
             # 解析语言能力
             if sections["languages"]:
                 # 分割语言条目
-                langs = re.findall(r'(\w+?语?)\s*[:：]?\s*([良好精通熟练基本]+|\w+级)', sections["languages"])
+                langs = re.findall(
+                    r"(\w+?语?)\s*[:：]?\s*([良好精通熟练基本]+|\w+级)",
+                    sections["languages"],
+                )
                 for lang, level in langs:
                     if lang.strip():
-                        result["languages"].append({
-                            "type": lang.strip(),
-                            "level": level.strip()
-                        })
-                
+                        result["languages"].append(
+                            {"type": lang.strip(), "level": level.strip()}
+                        )
+
                 # 如果没有找到匹配，尝试提取简单列表
                 if not result["languages"]:
-                    lang_items = re.split(r'[,;、，；]', sections["languages"])
+                    lang_items = re.split(r"[,;、，；]", sections["languages"])
                     for item in lang_items:
                         if item.strip():
-                            result["languages"].append({
-                                "type": item.strip(),
-                                "level": ""
-                            })
-            
+                            result["languages"].append(
+                                {"type": item.strip(), "level": ""}
+                            )
+
             # 解析自我评价
             if sections["self_assessment"]:
                 result["self_assessment"] = sections["self_assessment"]
-            
+
             logging.info(f"成功解析PDF文件: {pdf_path}")
             return result
-            
+
         except Exception as e:
             logging.error(f"解析PDF文件失败: {pdf_path}, 错误: {str(e)}")
             # 返回基本结构避免程序崩溃
             return {
-                "resume_id": os.path.basename(pdf_path).split('.')[0],
-                "error": f"解析失败: {str(e)}"
+                "resume_id": os.path.basename(pdf_path).split(".")[0],
+                "error": f"解析失败: {str(e)}",
             }
 
     def extract_sections(self, pdf_text: str) -> Dict[str, str]:
@@ -446,35 +505,45 @@ class Parser:
             "languages": r"(?i)(语言能力|语言|LANGUAGES)",
             "self_assessment": r"(?i)(自我评价|关于我|SELF ASSESSMENT)",
         }
-        
+
         section_contents = {key: "" for key in sections.keys()}
         section_starts = {key: -1 for key in sections.keys()}
-        
+
         # 找到各部分的起始位置
         for section, pattern in sections.items():
             match = re.search(pattern, pdf_text)
             if match:
                 section_starts[section] = match.start()
-        
+
         # 对部分位置排序，确定边界
-        ordered_sections = sorted([(pos, sec) for sec, pos in section_starts.items() if pos != -1])
-        
+        ordered_sections = sorted(
+            [(pos, sec) for sec, pos in section_starts.items() if pos != -1]
+        )
+
         # 提取各部分内容
         for i, (start_pos, section) in enumerate(ordered_sections):
-            end_pos = ordered_sections[i+1][0] if i < len(ordered_sections)-1 else len(pdf_text)
+            end_pos = (
+                ordered_sections[i + 1][0]
+                if i < len(ordered_sections) - 1
+                else len(pdf_text)
+            )
             section_contents[section] = pdf_text[start_pos:end_pos].strip()
-            
+
             # 移除标题行
             title_pattern = sections[section] + r".*?[\n\s]*"
-            section_contents[section] = re.sub(title_pattern, "", section_contents[section], flags=re.IGNORECASE)
-        
+            section_contents[section] = re.sub(
+                title_pattern, "", section_contents[section], flags=re.IGNORECASE
+            )
+
         # 提取个人信息块（通常是第一部分）
         if section_starts["personal_info"] > 0:
-            section_contents["personal_info"] = pdf_text[:section_starts["personal_info"]]
+            section_contents["personal_info"] = pdf_text[
+                : section_starts["personal_info"]
+            ]
         else:
             # 如果没有明确的个人信息标题，尝试使用第一段作为个人信息
-            section_contents["personal_info"] = re.split(r'\n\n', pdf_text)[0]
-        
+            section_contents["personal_info"] = re.split(r"\n\n", pdf_text)[0]
+
         return section_contents
 
     def _clean_dict(self, data: Dict) -> Dict:

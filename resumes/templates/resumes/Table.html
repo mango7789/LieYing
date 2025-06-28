@@ -2,10 +2,11 @@
     <table class="table table-bordered table-hover">
         <thead class="table-light">
             <tr>
+                <th>简历编号</th>
                 <th>姓名</th>
                 <th>个人信息</th>
                 <th>教育</th>
-                <th>目前状态</th>
+                <!-- <th>目前状态</th> -->
                 <!-- <th>当前状态</th> -->
                 <th>操作</th>
             </tr>
@@ -13,10 +14,11 @@
         <tbody>
             {% for resume in resumes %}
             <tr>
+                <td>{{ resume.resume_id }}</td>
                 <td>{{ resume.name }}</td>
                 <td>{{ resume.personal_info|default:"" }}</td>
                 <td>{{ resume.education|join:", " }}</td>
-                <td>{{ resume.status }}</td>
+                <!-- <td>{{ resume.status }}</td> -->
                 <!-- <td>{{ resume.tags|join:", " }}</td> -->
                 <!-- <td>{{ resume.current_status }}</td> -->
                 <td>

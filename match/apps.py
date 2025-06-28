@@ -1,5 +1,6 @@
 import sys
 from django.apps import AppConfig
+from django.conf import settings
 
 
 class MatchConfig(AppConfig):
@@ -17,7 +18,7 @@ class MatchConfig(AppConfig):
         scheduler.add_job(
             run_resume_job_matching,
             trigger="interval",
-            minutes=60,
+            minutes=settings.RESUME_JOB_MATCHING_INTERVAL_MINUTES,
             id="resume_job_matching",
             kwargs={"overwrite_existing": False},
             replace_existing=True,

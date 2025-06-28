@@ -35,8 +35,12 @@ def run_resume_job_matching(overwrite_existing: bool = False) -> dict:
             try:
                 existing = Matching.objects.filter(resume=resume, job=job).first()
                 if existing and not overwrite_existing:
-                    total_skipped += 1
-                    continue
+                    if (
+                        resume.updated_at <= existing.updated_at
+                        and job.updated_at <= existing.updated_at
+                    ):
+                        total_skipped += 1
+                        continue
 
                 resume_data = resume.to_json()
                 job_data = job.to_json()

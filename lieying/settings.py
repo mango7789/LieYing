@@ -121,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'zh-hans'
+LANGUAGE_CODE = "zh-hans"
 
 TIME_ZONE = "Asia/Shanghai"
 
@@ -171,3 +171,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # user-password for login remember time
 REMEMBER_ME_SECONDS = 60 * 60 * 24 * 14
+
+# Interval for calling the match API
+RESUME_JOB_MATCHING_INTERVAL_MINUTES = 10

@@ -106,5 +106,23 @@
         bindRemove();
         container.closest("form").addEventListener("submit", updateHidden);
     });
+
+    function getFieldLabels() {
+        switch (prefix) {
+            case "education":
+                return { school: "学校", time: "时间", details: "详情" };
+            case "projects":
+                return { project_name: "项目名称", employment_period: "任职时间", details: "详情" };
+            case "workings":
+                return { company: "公司", employment_period: "任职时间", job_name: "职位" };
+            case "positions":
+                return { position: "岗位", location: "地点", salary: "薪资" };
+            case "skills":
+                return {};
+            default:
+                return {};
+        }
+    }
+
 </script>
   
