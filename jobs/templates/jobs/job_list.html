@@ -2,15 +2,23 @@
 
 {% block content %}
 <section class="features">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="section-title">
-            <h2>{{ company }} - 在招职位</h2>
-            <p class="text-muted">共 {{ jobs|length }} 个职位</p>
-        </div>
+    <!-- 上面一行，中间居中标题 -->
+    <div class="text-center mb-3">
+        <h2 class="mb-0">{{ company }} - 在招职位</h2>
+        <p class="text-muted mb-0">共 {{ jobs|length }} 个职位</p>
+    </div>
+
+    <!-- 下面一行，左右分布按钮 -->
+    <div class="d-flex justify-content-between mb-4">
+        <a href="{% url 'jobs:company_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> 返回公司列表
+        </a>
         <a href="{% url 'jobs:job_create' company=company %}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i> 新增职位
         </a>
+
     </div>
+
 
     {% if jobs %}
     <div class="table-responsive">
@@ -33,41 +41,43 @@
                     <td>{{ job.salary|default:"面议" }}</td>
                     <td>{{ job.created_at|date:"Y-m-d" }}</td>
                     <td>
-                        {% if job.match_status == 'matched' %}
-                        <span class="badge bg-success">已匹配</span>
-                        {% elif job.match_status == 'matching' %}
-                        <span class="badge bg-warning text-dark">匹配中</span>
+                        {% if job.task_status == '已完成' %}
+                            <span class="badge bg-success">已匹配</span>
+                        {% elif job.task_status == '匹配中' %}
+                            <span class="badge bg-warning text-dark">匹配中</span>
+                        {% elif job.task_status == '未开始' %}
+                            <span class="badge bg-secondary">未匹配</span>
                         {% else %}
-                        <span class="badge bg-secondary">未匹配</span>
+                            <span class="badge bg-danger">失败</span>
                         {% endif %}
-                    </td>
+                        </td>
                     <td>
                         <div class="d-flex gap-2 flex-wrap">
                             <!-- 开始匹配按钮 -->
-                            {% if job.match_status != 'matching' and job.match_status != 'matched' %}
+                            {% if job.task_status != '匹配中' and job.task_status != '已完成' %}
                             <form method="post" action="{% url 'jobs:start_matching' job.id %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-play-fill me-1"></i>开始匹配
-                                </button>
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-play-fill me-1"></i>开始匹配
+                            </button>
                             </form>
                             {% endif %}
 
                             <!-- 查看结果按钮 -->
-                            {% if job.match_status == 'matched' %}
+                            {% if job.task_status == '已完成' %}
                             <a href="{% url 'jobs:match_result' job.id %}" class="btn btn-sm btn-outline-success">
-                                <i class="bi bi-eye me-1"></i>查看结果
+                            <i class="bi bi-eye me-1"></i>查看结果
                             </a>
                             {% endif %}
 
                             <!-- 编辑按钮 -->
                             <a href="{% url 'jobs:job_update' job.id %}" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-pencil me-1"></i>编辑
+                            <i class="bi bi-pencil me-1"></i>编辑
                             </a>
 
                             <!-- 删除按钮 -->
                             <button class="btn btn-sm btn-outline-danger delete-job-btn" data-job-id="{{ job.id }}">
-                                <i class="bi bi-trash me-1"></i>删除
+                            <i class="bi bi-trash me-1"></i>删除
                             </button>
                         </div>
                     </td>

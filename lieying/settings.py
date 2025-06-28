@@ -174,3 +174,13 @@ REMEMBER_ME_SECONDS = 60 * 60 * 24 * 14
 
 # Interval for calling the match API
 RESUME_JOB_MATCHING_INTERVAL_MINUTES = 5
+
+# Celery
+CELERY_BROKER_URL = "redis://:LieYing7789@localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://:LieYing7789@localhost:6379/0"
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+
+CELERY_TIMEZONE = "Asia/Shanghai"
+CELERY_ENABLE_UTC = True

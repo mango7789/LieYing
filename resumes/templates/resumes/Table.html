@@ -18,7 +18,7 @@
                 <td>{{ resume.resume_id }}</td>
                 <td>
                 {% for job in resume.related_jobs.all %}
-                    <a href="{% url 'job_edit' job.id %}" class="badge bg-primary me-1 mb-1 text-decoration-none" target="_blank">
+                    <a href="{% url 'jobs:job_update' job.id %}" class="badge bg-primary me-1 mb-1 text-decoration-none" target="_blank">
                     {{ job.company|default:"" }} - {{ job.name|default:"" }}
                     </a>
                 {% empty %}

@@ -23,7 +23,7 @@ class ResumeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
-            field.widget.attrs.update({'class': 'form-control'})
+            field.widget.attrs.update({"class": "form-control"})
 
     def clean_json_field(self, field_name, required_keys=None, is_dict=False):
         raw_data = self.cleaned_data.get(field_name, "[]")
