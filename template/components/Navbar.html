@@ -31,15 +31,16 @@
                     </li>
 
                     <li class="nav-item dropdown">
-                        <a href="{% url 'job_list' %}" 
+                        <a href="{% url 'jobs:company_list' %}" 
                         class="nav-link {% if request.path|first_path_segment == 'job' %}active{% endif %}" 
                         id="jobDropdown" 
                         role="button">
                             岗位库
                         </a>
                         <ul class="dropdown-menu custom-dropdown" aria-labelledby="jobDropdown">
-                            <li><a class="dropdown-item" href="{% url 'job_list' %}">岗位列表</a></li>
+                            <li><a class="dropdown-item" href="{% url 'jobs:company_list' %}">岗位列表</a></li>
                             <li><a class="dropdown-item" href="{% url 'job_add' %}">新建岗位</a></li>
+                            {# <li><a class="dropdown-item" href="#">上传岗位</a></li> #}
                         </ul>
                     </li>
                     <li class="nav-item">

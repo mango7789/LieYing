@@ -30,7 +30,7 @@ urlpatterns = [
     # 简历模块
     path("resume/", include("resumes.urls")),
     # 工作模块
-    path("job/", include("jobs.urls")),
+    path("jobs/", include("jobs.urls")),
     # 打分（匹配）模块
     path("match/", include("match.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
