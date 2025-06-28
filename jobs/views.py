@@ -12,6 +12,7 @@ from .constants import CITY_CHOICES, EDUCATION_CHOICES, WORK_EXPERIENCE_CHOICES
 from match.models import Matching
 from match.services import run_matching_for_job
 
+
 ###########################################################
 #                         List                            #
 ###########################################################
@@ -29,6 +30,7 @@ def company_list(request):
     return render(request, "jobs/company_list.html", {"companies": companies})
 
 
+# TODO: 可以自定义配置打分权重
 @login_required
 def job_list(request, company):
     # 获取指定公司的所有职位
@@ -62,12 +64,12 @@ def get_job_match_status(job_id):
         status = "未开始"
     elif summary["processing"] > 0:
         status = "匹配中"
-    elif summary["completed"] == summary["total"]:
+    elif summary["processing"] == 0:
         status = "已完成"
     else:
         status = "失败"
 
-    # logging.debug(summary)
+    logging.debug(summary)
     return status
 
 
@@ -76,6 +78,7 @@ def get_job_match_status(job_id):
 ###########################################################
 
 
+# TODO: 增加岗位负责人信息
 @login_required
 def job_create_general(request):
     """Floor1的通用新增岗位视图"""
@@ -200,6 +203,8 @@ def job_delete(request, pk):
 ###########################################################
 #                         Match                           #
 ###########################################################
+
+
 @shared_task(bind=True)
 def async_run_matching_for_job(self, job_id):
     try:
@@ -232,7 +237,7 @@ def match_result(request, job_id):
     """查看匹配结果"""
     job = get_object_or_404(JobPosition, pk=job_id)
 
-    # TODO: 从match模块获取实际的匹配结果数据
+    # 从match模块获取实际的匹配结果数据
     # 这里应该查询match模块的匹配结果
     try:
         matchings = (

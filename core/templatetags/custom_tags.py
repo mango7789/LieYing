@@ -1,4 +1,5 @@
 from django import template
+from urllib.parse import urlencode
 
 register = template.Library()
 
@@ -12,3 +13,10 @@ def first_path_segment(path):
         return ""
     segments = path.strip("/").split("/")
     return segments[0] if segments else ""
+
+
+@register.simple_tag
+def querydict(get, key, value):
+    query = get.copy()
+    query[key] = value
+    return query.urlencode()

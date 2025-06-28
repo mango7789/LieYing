@@ -60,7 +60,7 @@ class JobMatchTask(models.Model):
     status = models.CharField(
         max_length=10, choices=TASK_STATUS_CHOICES, default="未开始"
     )
-    last_processed_resume_id = models.IntegerField(null=True, blank=True)
+    last_processed_resume_id = models.CharField(max_length=32, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

@@ -81,12 +81,6 @@
 </section>
 
 
-<div class="text-center mb-2 ms-1">
-  <strong>
-    显示第 {{ page_obj.start_index }} - {{ page_obj.end_index }} 条，共 {{ page_obj.paginator.count }} 条简历记录
-  </strong>
-</div>
-
 <section class="stats">
   {% include "resumes/Table.html" %}
 </section>
@@ -96,4 +90,26 @@
 {% block extra_js %}
 <script src="{% static 'resumes/filter.js' %}"></script>
 <script src="{% static 'resumes/delete.js' %}"></script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).on("click", ".page-ajax", function (e) {
+    e.preventDefault();
+    const url = $(this).attr("href");
+    history.pushState(null, '', url);
+
+    $.get(url, function (data) {
+      $("#resume-list-container").parent().html(data.html);
+    }).fail(function () {
+      alert("分页加载失败");
+    });
+  });
+
+  window.onpopstate = function () {
+    const url = window.location.href;
+    $.get(url, function (data) {
+      $("#resume-list-container").parent().html(data);
+    });
+  };
+</script>
 {% endblock %}

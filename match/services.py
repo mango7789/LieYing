@@ -4,9 +4,10 @@ from resumes.models import Resume
 from jobs.models import JobPosition
 from .models import Matching, JobMatchTask
 from .matcher import ResumeJobMatcher
+from django.db import transaction
 
 logger = logging.getLogger("match")
-handler = logging.FileHandler("./match/matcher.log", encoding="utf-8")
+handler = logging.FileHandler("./logs/matcher.log", encoding="utf-8")
 formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
 handler.setFormatter(formatter)
 logger.setLevel(logging.INFO)
@@ -97,20 +98,23 @@ def run_matching_for_job(job_id: int, overwrite_existing=False):
     task, created = JobMatchTask.objects.get_or_create(job=job)
 
     if task.status == "匹配中" and task.last_processed_resume_id:
-        # 断点续跑，从上次处理简历ID后续开始
-        resumes = Resume.objects.filter(id__gt=task.last_processed_resume_id).order_by(
-            "id"
-        )
-        logger.info(
-            f"断点续跑匹配岗位 {job.name}，从简历ID {task.last_processed_resume_id} 开始"
-        )
+        resumes = Resume.objects.filter(
+            resume_id__gt=task.last_processed_resume_id
+        ).order_by("resume_id")
     else:
         # 新任务
-        task.status = "匹配中"
-        task.last_processed_resume_id = None
-        task.save()
-        resumes = Resume.objects.all().order_by("id")
-        logger.info(f"新开始匹配岗位 {job.name}")
+        with transaction.atomic():
+            task.status = "匹配中"
+            task.last_processed_resume_id = None
+            task.save()
+            for resume in resumes:
+                Matching.objects.get_or_create(
+                    resume=resume,
+                    job=job,
+                    defaults={
+                        "score_source": "自动打分器",
+                    },
+                )
 
     if not hasattr(run_resume_job_matching, "_matcher"):
         run_resume_job_matching._matcher = ResumeJobMatcher()
@@ -130,35 +134,29 @@ def run_matching_for_job(job_id: int, overwrite_existing=False):
                     resume.updated_at <= existing.updated_at
                     and job.updated_at <= existing.updated_at
                 ):
-                    # 跳过不必要更新
                     continue
+
+            existing.task_status = "匹配中"
+            existing.save()
 
             result = matcher.evaluate_match(resume.to_json(), job.to_json())
             score = result.get("initial_score", None)
 
-            if existing:
+            with transaction.atomic():
                 existing.score = score
                 existing.score_source = "自动打分器"
                 existing.status = "进入初筛" if score and score > 5 else "未过分数筛选"
                 existing.task_status = "已完成" if score is not None else "匹配中"
                 existing.save()
-            else:
-                Matching.objects.create(
-                    resume=resume,
-                    job=job,
-                    score=score,
-                    score_source="自动打分器",
-                    status="进入初筛" if score and score > 5 else "未过分数筛选",
-                    task_status="已完成" if score is not None else "匹配中",
-                )
 
-            # 更新断点
-            task.last_processed_resume_id = resume.id
-            task.save()
+                task.last_processed_resume_id = resume.resume_id
+                task.save()
 
             processed_count += 1
         except Exception as e:
-            logger.error(f"匹配简历 {resume.id} 出错：{e}")
+            existing.task_status = "失败"
+            existing.save()
+            logger.error(f"匹配简历 {resume.resume_id} 出错：{e}")
             failed_count += 1
 
     # 匹配完毕

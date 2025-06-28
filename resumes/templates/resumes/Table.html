@@ -1,4 +1,10 @@
 <div id="resume-list-container">
+    <div class="text-center mb-2 ms-1">
+        <strong>
+            显示第 {{ page_obj.start_index }} - {{ page_obj.end_index }} 条，共 {{ page_obj.paginator.count }} 条简历记录
+        </strong>
+    </div>
+
     <table class="table table-bordered table-hover">
         <thead class="table-light">
             <tr>

@@ -72,7 +72,7 @@ def resume_list(request):
         )
 
     # 分页
-    paginator = Paginator(qs, 10)
+    paginator = Paginator(qs, 5)
     page_number = request.GET.get("page", 1)
     try:
         page_obj = paginator.page(page_number)
@@ -94,6 +94,7 @@ def resume_list(request):
         "selected_working_y": work_years,
         "filter_keyword": keyword,
         "is_staff": request.user.is_staff,
+        "query": q,
     }
 
     # Ajax 异步更新简历表格
