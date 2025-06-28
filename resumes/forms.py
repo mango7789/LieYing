@@ -2,9 +2,18 @@ import json
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import Resume
+from jobs.models import JobPosition
 
 
 class ResumeForm(forms.ModelForm):
+    related_jobs = forms.ModelMultipleChoiceField(
+        queryset=JobPosition.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(
+            attrs={"class": "form-select", "multiple": "multiple"}
+        ),
+    )
+
     education = forms.CharField(widget=forms.HiddenInput(), required=False)
     skills = forms.CharField(widget=forms.HiddenInput(), required=False)
     project_experiences = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -86,4 +95,5 @@ class ResumeForm(forms.ModelForm):
             "working_experiences",
             "current_status",
             "tags",
+            "related_jobs",
         ]

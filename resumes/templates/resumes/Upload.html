@@ -12,12 +12,23 @@
       <!-- 上传表单 -->
       <form id="upload-form" method="post" action="{% url 'resume_upload' %}" enctype="multipart/form-data">
         {% csrf_token %}
+        <!-- 岗位选择 -->
+        <div class="mb-3">
+          <label for="job-select" class="form-label">选择关联岗位</label>
+            <select id="job-select" name="job_ids" class="form-select" multiple="multiple" style="width: 100%;">
+              {% for job in jobs %}
+                <option value="{{ job.id }}">{{ job.company|default:"" }} - {{ job.name|default:"" }}</option>
+              {% endfor %}
+            </select>
+          <div class="form-text">可多选，支持搜索岗位名称</div>
+        </div>
+
 
         <!-- 上传区域 -->
-        <div id="upload-area" class="border border-primary rounded p-4 text-center mb-3" style="cursor: pointer;">
+        <div id="upload-area" class="border border-primary rounded p-4 text-center mb-3" style="cursor: pointer; margin-top: 20px;">
           <i class="bi bi-upload" style="font-size: 2rem;"></i>
           <p id="upload-hint" class="mt-2 mb-0 text-muted">
-            点击上传简历文件<br>
+            点击上传简历文件（目前仅支持中文简历）<br>
             <small>支持 PDF / Excel / HTML</small>
           </p>
         </div>
@@ -56,6 +67,19 @@
 
 {% block extra_js %}
 <script src="{% static 'resumes/upload.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    $('#job-select').select2({
+      placeholder: "",
+      allowClear: true,     
+      width: '100%'
+    });
+  });
+</script>
 {% endblock %}
 
 #file-list {

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from jobs.models import JobPosition
 
 
 class Resume(models.Model):
@@ -44,6 +45,10 @@ class Resume(models.Model):
     tags = models.JSONField("标签", default=list, blank=True)
     # TODO: 标注简历来源
     # source = models.CharField("来源", blank=True, default="猎聘")
+
+    related_jobs = models.ManyToManyField(
+        JobPosition, verbose_name="关联岗位", blank=True
+    )
 
     class Meta:
         verbose_name = "简历"

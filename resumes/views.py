@@ -17,6 +17,7 @@ from .constants import *
 from .parser import Parser
 from core.utils.crypto import decrypt_params
 from core.decorators import admin_required
+from jobs.models import JobPosition
 
 resume_parser = Parser()
 
@@ -41,6 +42,7 @@ def resume_list(request):
     qs = (
         Resume.objects.exclude(resume_id__isnull=True)
         .exclude(resume_id="")
+        .prefetch_related("related_jobs")
         .order_by("-updated_at")
     )
     city = params["city"]
@@ -99,6 +101,8 @@ def resume_list(request):
         html = render_to_string("resumes/Table.html", context, request=request)
         return JsonResponse({"html": html})
 
+    # TODO: 点击关联岗位，跳转到对应岗位的具体情况，而非编辑界面
+
     return render(request, "resumes/List.html", context)
 
 
@@ -109,7 +113,8 @@ def resume_add():
 
 @login_required
 def resume_upload_page(request):
-    return render(request, "resumes/Upload.html")
+    jobs = JobPosition.objects.all()
+    return render(request, "resumes/Upload.html", {"jobs": jobs})
 
 
 @login_required
@@ -159,7 +164,6 @@ def resume_upload(request):
         )
 
     filename = uploaded_file.name
-
     if not filename.lower().endswith(ALLOWED_EXTENSIONS):
         return JsonResponse(
             {
@@ -170,7 +174,6 @@ def resume_upload(request):
 
     local_path = os.path.join(UPLOAD_FOLDER, filename)
     full_path = os.path.join(settings.MEDIA_ROOT, local_path)
-
     os.makedirs(os.path.dirname(full_path), exist_ok=True)
     with open(full_path, "wb+") as destination:
         for chunk in uploaded_file.chunks():
@@ -196,6 +199,12 @@ def resume_upload(request):
             for field, value in resume_dict.items():
                 setattr(resume_obj, field, value)
             resume_obj.save()
+
+        job_ids = request.POST.getlist("job_ids")
+        # logging.debug(f"Job ids: {job_ids}")
+        if job_ids:
+            qs = JobPosition.objects.filter(id__in=job_ids)
+            resume_obj.related_jobs.set(qs)
 
         upload_record.parse_status = "success"
         upload_record.resume = resume_obj

@@ -1,8 +1,8 @@
 <table class="table table-striped">
     <thead class="pretty-thead-row">
         <tr>
-            <th>职位</th>
             <th>招聘企业</th>
+            <th>职位</th>
             <th>工作地点</th>
             <th>工作年限</th>
             <th>学历要求</th>
@@ -13,8 +13,8 @@
     <tbody>
         {% for job in jobs %}
         <tr>
-            <td>{{ job.name }}</td>
             <td>{{ job.company }}</td>
+            <td>{{ job.name }}</td>
             <td>{{ job.city }}</td>
             <td>{{ job.work_experience|default:"-" }}</td>
             <td>{{ job.education }}</td>

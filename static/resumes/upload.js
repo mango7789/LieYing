@@ -133,9 +133,25 @@ document.addEventListener("DOMContentLoaded", function () {
     const resultSection = document.getElementById("upload-result");
     resultBody.innerHTML = "";
 
+    const selectedJobIds = $('#job-select').val();
+
     for (const file of selectedFiles) {
       const formData = new FormData();
       formData.append("file", file);
+
+      // 岗位 ID
+      // const jobSelect = document.getElementById("job-select");
+      // const selectedJobs = Array.from(jobSelect.selectedOptions).map(opt => opt.value);
+      // selectedJobs.forEach(jobId => {
+      //   formData.append("job_ids", jobId);
+      // });
+      console.log(selectedJobIds.length);
+      if (selectedJobIds && selectedJobIds.length > 0) {
+        for (const jobId of selectedJobIds) {
+          console.log(jobId);
+          formData.append("job_ids", jobId);
+        }
+      }
 
       let status = "失败";
       let message = "未知错误";

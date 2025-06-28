@@ -34,8 +34,9 @@
           <th>简历编号</th>
           <th>文件名</th>
           <th>上传时间</th>
+          <th>上传用户</th>
           <th>解析状态</th>
-          <th>错误信息</th>
+          <!-- <th>错误信息</th> -->
         </tr>
       </thead>
       <tbody>
@@ -59,19 +60,22 @@
             </td>
             <td>{{ record.upload_time|date:"Y-m-d H:i:s" }}</td>
             <td>
+              {{ record.user }}
+            </td>
+            <td>
               {% if record.parse_status == "success" %}
                 <span class="text-success">解析成功</span>
               {% else %}
                 <span class="text-danger">解析失败</span>
               {% endif %}
             </td>
-            <td>
+            <!-- <td>
               {% if record.error_message %}
                 <{{ record.error_message }}</a>
               {% else %}
                 
               {% endif %}
-            </td>
+            </td> -->
           </tr>
         {% endfor %}
       </tbody>
