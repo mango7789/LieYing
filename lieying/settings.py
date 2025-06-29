@@ -11,11 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
-import environ
 from pathlib import Path
-
-env = environ.Env()
-environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = "django-insecure-t2bbl9uyh0tf1!f7*lhhrkixebdr)a-7gs6f3l+xks+l^hvqvx"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -47,6 +43,7 @@ INSTALLED_APPS = [
     "resumes",
     "jobs",
     "match",
+    "django_apscheduler",
 ]
 
 MIDDLEWARE = [
@@ -81,6 +78,11 @@ WSGI_APPLICATION = "lieying.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
 
 DATABASES = {
     "default": {
@@ -175,8 +177,8 @@ REMEMBER_ME_SECONDS = 60 * 60 * 24 * 14
 RESUME_JOB_MATCHING_INTERVAL_MINUTES = 5
 
 # Celery
-CELERY_BROKER_URL = env("CELERY_BROKER_URL")
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
+CELERY_BROKER_URL = "redis://:LieYing7789@127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "redis://:LieYing7789@127.0.0.1:6379/0"
 
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
@@ -188,7 +190,7 @@ CELERY_ENABLE_UTC = True
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("REDIS_CACHE_LOCATION"),
+        "LOCATION": "redis://:LieYing7789@127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
