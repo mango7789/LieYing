@@ -42,9 +42,9 @@ services:
     container_name: lieying-redis
     ports:
       - "7791:6379"
-    volumes:
-      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    environment:
+      - REDIS_PASSWORD=LieYing7789
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     networks:
       - lieying-net
     restart: always
