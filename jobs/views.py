@@ -37,6 +37,7 @@ def job_list(request, company):
     jobs = JobPosition.objects.filter(company=company).order_by("-created_at")
 
     # 添加匹配状态逻辑
+    # TODO: 对匹配中的岗位增加匹配进度的展示
     for job in jobs:
         job.task_status = get_job_match_status(job.id)
 
@@ -60,8 +61,11 @@ def get_job_match_status(job_id):
     # 这里应该查询match模块的数据库表
     # 暂时返回模拟状态
     summary = get_job_matching_summary(job_id)
-    if summary["completed"] == 0:
-        status = "未开始"
+    if summary["completed"] == 0 and summary["processing"] == 0:
+        if summary["failed"] == 0:
+            status = "未开始"
+        else:
+            status = "失败"
     elif summary["processing"] > 0:
         status = "匹配中"
     elif summary["processing"] == 0:
@@ -71,6 +75,7 @@ def get_job_match_status(job_id):
 
     logging.debug(summary)
     return status
+    return {"status": status, "summary": summary}
 
 
 ###########################################################
