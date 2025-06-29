@@ -14,9 +14,12 @@ def match_list(request):
 
     # 匹配简历 ID 或岗位名称
     if query:
-        records = records.filter(resume__resume_id__icontains=query) | records.filter(
-            job__name__icontains=query
+        records = (
+            records.filter(resume__resume_id__icontains=query)
+            | records.filter(job__name__icontains=query)
+            | records.filter(job__company__icontains=query)
         )
+    # TODO: 根据状态下拉框筛选
 
     records = records.order_by("-updated_at")
 

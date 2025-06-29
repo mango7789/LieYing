@@ -5,7 +5,13 @@ from jobs.models import JobPosition
 from .models import Matching, JobMatchTask
 from .matcher import ResumeJobMatcher
 from django.db import transaction
+from django.core.cache import cache
+from celery import shared_task
+from celery.signals import worker_ready
 
+###########################################################
+#                     Configuration                       #
+###########################################################
 logger = logging.getLogger("match")
 handler = logging.FileHandler("./logs/matcher.log", encoding="utf-8")
 formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
@@ -14,6 +20,26 @@ logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 
+###########################################################
+#                        Utility                          #
+###########################################################
+def acquire_lock(key: str, timeout: int = 60) -> bool:
+    """
+    Acquire a lock using Django cache
+    """
+    return cache.add(key, "locked", timeout)
+
+
+def release_lock(key: str):
+    """
+    Release the lock
+    """
+    cache.delete(key)
+
+
+###########################################################
+#                       Functions                         #
+###########################################################
 def run_resume_job_matching(job_id: int, overwrite_existing: bool = False) -> dict:
     # Use closure variable to cache the `matcher`
     if not hasattr(run_resume_job_matching, "_matcher"):
@@ -93,7 +119,7 @@ def run_resume_job_matching(job_id: int, overwrite_existing: bool = False) -> di
     return summary
 
 
-def run_matching_for_job(job_id: int, overwrite_existing=False):
+def run_matching_for_job(job_id: int):
     job = JobPosition.objects.get(id=job_id)
     task, created = JobMatchTask.objects.get_or_create(job=job)
 
@@ -103,18 +129,28 @@ def run_matching_for_job(job_id: int, overwrite_existing=False):
         ).order_by("resume_id")
     else:
         # 新任务
+        resumes = Resume.objects.all()
         with transaction.atomic():
             task.status = "匹配中"
             task.last_processed_resume_id = None
             task.save()
-            for resume in resumes:
-                Matching.objects.get_or_create(
-                    resume=resume,
-                    job=job,
-                    defaults={
-                        "score_source": "自动打分器",
-                    },
-                )
+
+    for resume in resumes:
+        obj, created = Matching.objects.get_or_create(
+            resume=resume,
+            job=job,
+            defaults={
+                "score_source": "自动打分器",
+                "task_status": "匹配中",
+            },
+        )
+        # Only update match records with non-finished status and empty score
+        if not created:
+            if obj.task_status != "已完成":
+                if obj.score is None:
+                    obj.score_source = "自动打分器"
+                    obj.task_status = "匹配中"
+                    obj.save(update_fields=["score_source", "task_status"])
 
     if not hasattr(run_resume_job_matching, "_matcher"):
         run_resume_job_matching._matcher = ResumeJobMatcher()
@@ -129,15 +165,12 @@ def run_matching_for_job(job_id: int, overwrite_existing=False):
     for resume in resumes:
         try:
             existing = Matching.objects.filter(resume=resume, job=job).first()
-            if existing and not overwrite_existing:
-                if (
-                    resume.updated_at <= existing.updated_at
-                    and job.updated_at <= existing.updated_at
-                ):
+            if existing:
+                if existing.task_status == "已完成":
                     continue
 
-            existing.task_status = "匹配中"
-            existing.save()
+            # existing.task_status = "匹配中"
+            # existing.save()
 
             result = matcher.evaluate_match(resume.to_json(), job.to_json())
             score = result.get("initial_score", None)
@@ -174,3 +207,27 @@ def run_matching_for_job(job_id: int, overwrite_existing=False):
         "failed": failed_count,
         "status": task.status,
     }
+
+
+@shared_task(bind=True)
+def async_run_matching_for_job(self, job_id):
+    lock_key = f"lock:match:{job_id}"
+    if not acquire_lock(lock_key, timeout=600):
+        return "Skipped due to lock"
+
+    try:
+        result = run_matching_for_job(job_id)
+        return result
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=60, max_retries=3)
+    finally:
+        release_lock(lock_key)
+
+
+@worker_ready.connect
+def at_celery_start(sender, **kwargs):
+    with sender.app.connection() as conn:
+        logging.info("Celery worker started. Resuming unfinished matching tasks...")
+        tasks = JobMatchTask.objects.filter(status="匹配中")
+        for task in tasks:
+            async_run_matching_for_job.apply_async(args=[task.job_id], connection=conn)

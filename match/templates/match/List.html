@@ -47,7 +47,11 @@
               {{ record.resume.resume_id }}
             </a>
           </td>
-          <td>{{ record.job.name }}</td>
+          <td>
+            <a class="badge bg-primary me-1 mb-1 text-decoration-none" target="_blank">
+              {{ record.job.company|default:"" }} - {{ record.job.name|default:"" }}
+            </a>
+          </td>
           <td>{{ record.status }}</td>
           <td>{{ record.score|default:"-" }}</td>
           <td>{{ record.score_source|default:"-" }}</td>

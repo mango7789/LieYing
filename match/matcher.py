@@ -2,6 +2,7 @@ import re
 import json
 import torch
 import logging
+import subprocess
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from typing import Dict, Any, Optional
 
@@ -9,13 +10,43 @@ from typing import Dict, Any, Optional
 class ResumeJobMatcher:
     DEFAULT_MODEL_PATH = "/home/resume/AIChat/model/Qwen2.5-7B-Instruct"
 
+    def _get_free_gpu(self) -> str:
+        try:
+            result = subprocess.run(
+                [
+                    "nvidia-smi",
+                    "--query-gpu=memory.free,index",
+                    "--format=csv,nounits,noheader",
+                ],
+                stdout=subprocess.PIPE,
+                encoding="utf-8",
+                check=True,
+            )
+            gpu_infos = result.stdout.strip().split("\n")
+
+            free_memories = []
+            for info in gpu_infos:
+                free_mem, idx = info.split(",")
+                free_memories.append((int(free_mem), int(idx)))
+
+            # 按剩余显存降序排列
+            free_memories.sort(reverse=True, key=lambda x: x[0])
+
+            if free_memories:
+                return f"cuda:{free_memories[0][1]}"
+            else:
+                return "cpu"
+        except Exception as e:
+            logging.warning(f"获取空闲GPU失败，使用CPU：{e}")
+            return "cpu"
+
     def __init__(self, model_path: Optional[str] = None, device: Optional[str] = None):
         self.model_path = model_path or self.DEFAULT_MODEL_PATH
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device or self._get_free_gpu()
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_path,
-            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+            torch_dtype=torch.float16 if "cuda" in self.device else torch.float32,
             low_cpu_mem_usage=True,
             trust_remote_code=True,
         ).to(self.device)
@@ -102,7 +133,7 @@ class ResumeJobMatcher:
             # 移除可能的自然语言前缀
             json_str = self._clean_json_string(response)
             return json.loads(json_str)
-        except Exception as e:
+        except Exception:
             return self._enhanced_extract(response)
 
     def _clean_json_string(self, response: str) -> str:
@@ -210,3 +241,9 @@ class ResumeJobMatcher:
         if not resume or not job:
             return {"error": "文件加载失败"}
         return self.evaluate_match(resume, job)
+
+    def cleanup(self):
+        """释放显存资源，适用于任务结束后调用"""
+        del self.model
+        del self.tokenizer
+        torch.cuda.empty_cache()

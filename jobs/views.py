@@ -1,16 +1,16 @@
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count, Max, Q
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-import logging
-from celery import shared_task
+from django.views.decorators.http import require_POST
 
 from .models import JobPosition
 from .forms import JobForm
 from .constants import CITY_CHOICES, EDUCATION_CHOICES, WORK_EXPERIENCE_CHOICES
 from match.models import Matching
-from match.services import run_matching_for_job
+from match.services import async_run_matching_for_job
 
 
 ###########################################################
@@ -60,7 +60,7 @@ def get_job_match_status(job_id):
     # 这里应该查询match模块的数据库表
     # 暂时返回模拟状态
     summary = get_job_matching_summary(job_id)
-    if summary["total"] == 0:
+    if summary["completed"] == 0:
         status = "未开始"
     elif summary["processing"] > 0:
         status = "匹配中"
@@ -187,6 +187,7 @@ def job_update(request, pk):
 
 
 @login_required
+@require_POST
 def job_delete(request, pk):
     job = get_object_or_404(JobPosition, pk=pk)
 
@@ -205,16 +206,8 @@ def job_delete(request, pk):
 ###########################################################
 
 
-@shared_task(bind=True)
-def async_run_matching_for_job(self, job_id):
-    try:
-        result = run_matching_for_job(job_id)
-        return result
-    except Exception as exc:
-        raise self.retry(exc=exc, countdown=60, max_retries=3)
-
-
 @login_required
+@require_POST
 def start_matching(request, job_id):
     """开始匹配功能"""
     job = get_object_or_404(JobPosition, pk=job_id)
