@@ -3,6 +3,17 @@
 <nav class="d-flex justify-content-center">
   <ul class="pagination">
 
+    {# 首页按钮 #}
+    {% if page_obj.number > 1 %}
+      <li class="page-item">
+        <a class="page-link page-ajax"
+           href="?{% querydict request.GET 'page' 1 %}">首页</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">首页</span></li>
+    {% endif %}
+
+    {# 上一页 #}
     {% if page_obj.has_previous %}
       <li class="page-item">
         <a class="page-link page-ajax"
@@ -12,6 +23,7 @@
       <li class="page-item disabled"><span class="page-link">上一页</span></li>
     {% endif %}
 
+    {# 页码循环 #}
     {% for num in page_obj.paginator.page_range %}
       {% if num == page_obj.number %}
         <li class="page-item active"><span class="page-link">{{ num }}</span></li>
@@ -23,6 +35,7 @@
       {% endif %}
     {% endfor %}
 
+    {# 下一页 #}
     {% if page_obj.has_next %}
       <li class="page-item">
         <a class="page-link page-ajax"
@@ -32,6 +45,15 @@
       <li class="page-item disabled"><span class="page-link">下一页</span></li>
     {% endif %}
 
+    {# 最后一页按钮 #}
+    {% if page_obj.number < page_obj.paginator.num_pages %}
+      <li class="page-item">
+        <a class="page-link page-ajax"
+           href="?{% querydict request.GET 'page' page_obj.paginator.num_pages %}">最后一页</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">最后一页</span></li>
+    {% endif %}
+
   </ul>
 </nav>
-
