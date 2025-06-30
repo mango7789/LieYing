@@ -1,24 +1,34 @@
 version: '3.8'
 
 services:
+
   django:
     build: .
     container_name: lieying-django
     command: >
-      gunicorn lieying.wsgi:application
-      --bind 0.0.0.0:8000
+      sh -c "
+        python manage.py collectstatic --noinput &&
+        gunicorn lieying.wsgi:application --bind 0.0.0.0:8000
+      "
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - mysql
       - redis
     environment:
-      - DJANGO_SETTINGS_MODULE=lieying.settings
-    networks:
-      - lieying-net
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
     volumes:
       - .:/app
+      - static-volume:/app/static
+      - media-volume:/app/media
+    networks:
+      - lieying-net
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   mysql:
     image: mysql:8.0
@@ -26,28 +36,36 @@ services:
     ports:
       - "7790:3306"
     environment:
-      MYSQL_DATABASE: lieying
-      MYSQL_USER: lieying
-      MYSQL_PASSWORD: lieying
-      MYSQL_ROOT_PASSWORD: lieying
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql-data:/var/lib/mysql
       - ./lieying.sql:/docker-entrypoint-initdb.d/lieying.sql:ro
     networks:
       - lieying-net
     restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7
     container_name: lieying-redis
     ports:
       - "7791:6379"
-    environment:
-      - REDIS_PASSWORD=LieYing7789
     command: redis-server --requirepass ${REDIS_PASSWORD}
     networks:
       - lieying-net
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   lieying-net:
@@ -55,3 +73,6 @@ networks:
 
 volumes:
   mysql-data:
+  static-volume:
+  media-volume:
+
