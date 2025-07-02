@@ -176,6 +176,9 @@ REMEMBER_ME_SECONDS = 60 * 60 * 24 * 14
 # Interval for calling the match API
 RESUME_JOB_MATCHING_INTERVAL_MINUTES = 5
 
+# Matcher
+MATCHER_MODEL_PATH = "/home/resume/AIChat/model/Qwen2.5-7B-Instruct"
+
 # Celery
 CELERY_BROKER_URL = "redis://:LieYing7789@127.0.0.1:6379/0"
 CELERY_RESULT_BACKEND = "redis://:LieYing7789@127.0.0.1:6379/0"

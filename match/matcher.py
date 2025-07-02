@@ -6,9 +6,11 @@ import subprocess
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from typing import Dict, Any, Optional
 
+from django.conf import settings
+
 
 class ResumeJobMatcher:
-    DEFAULT_MODEL_PATH = "/home/resume/AIChat/model/Qwen2.5-7B-Instruct"
+    DEFAULT_MODEL_PATH = settings.MATCHER_MODEL_PATH
 
     def _get_free_gpu(self) -> str:
         try:
