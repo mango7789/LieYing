@@ -20,3 +20,11 @@ def querydict(get, key, value):
     query = get.copy()
     query[key] = value
     return query.urlencode()
+
+
+@register.filter
+def mul(value, arg):
+    try:
+        return int(value) * int(arg)
+    except (ValueError, TypeError):
+        return ""

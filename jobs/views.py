@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .models import JobPosition
 from .forms import JobForm
@@ -230,34 +231,62 @@ def start_matching(request, job_id):
     return render(request, "jobs/start_matching_confirm.html", {"job": job})
 
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+
 @login_required
 def match_result(request, job_id):
     """查看匹配结果"""
     job = get_object_or_404(JobPosition, pk=job_id)
 
-    # 从match模块获取实际的匹配结果数据
-    # 这里应该查询match模块的匹配结果
     try:
         matchings = (
             Matching.objects.select_related("resume").filter(job=job).order_by("-score")
         )
 
-        resumes = [
-            {
-                "resume_id": m.resume.resume_id,
-                "name": m.resume.name,
-                "match_score": round(m.score or 0, 1),
-                "status": m.resume.status,
-                "match_status": m.status,
-            }
-            for m in matchings
-        ]
+        resumes_data = []
 
-        for r in resumes:
-            r["match_score_percent"] = r["match_score"] * 10
+        for m in matchings:
+            resume = m.resume
+            work_exp = resume.working_experiences or []
+            if work_exp:
+                latest_job = work_exp[0]
+                current_company = latest_job.get("company", "")
+                current_position = latest_job.get("job_name", "")
+            else:
+                current_company = ""
+                current_position = ""
+
+            resumes_data.append(
+                {
+                    "resume_id": resume.resume_id,
+                    "name": resume.name,
+                    "match_score": round(m.score or 0, 1),
+                    "match_score_percent": round((m.score or 0) * 10, 1),
+                    "status": resume.status,
+                    "match_status": m.status,
+                    "current_company": current_company,
+                    "current_position": current_position,
+                }
+            )
+
+        # 分页逻辑
+        paginator = Paginator(resumes_data, 8)
+        page = request.GET.get("page")
+        try:
+            page_obj = paginator.page(page)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
 
     except Exception as e:
         messages.error(request, f"获取匹配结果失败：{str(e)}")
-        resumes = []
+        page_obj = []
 
-    return render(request, "jobs/match_result.html", {"job": job, "resumes": resumes})
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return render(request, "jobs/match_result_table.html", {"page_obj": page_obj})
+    else:
+        return render(
+            request, "jobs/match_result.html", {"job": job, "page_obj": page_obj}
+        )
