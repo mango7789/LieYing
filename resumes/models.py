@@ -1,6 +1,54 @@
+import re
 from django.db import models
 from django.contrib.auth.models import User
 from jobs.models import JobPosition
+
+
+def parse_required_info(info_str):
+    """
+    解析 personal_info，返回字典只包含
+    性别、年龄、学历、工作年限、岗位、公司名称
+    """
+    result = {
+        "gender": "",
+        "age": "",
+        "education": "",
+        "work_years": "",
+        "position": "",
+        "company": "",
+    }
+    if not info_str:
+        return result
+
+    parts = [p.strip() for p in info_str.split("|")]
+
+    # 第二部分：性别 年龄 城市 学历 工作年限 薪资
+    if len(parts) > 1:
+        tokens = parts[1].split()
+        for t in tokens:
+            if t in ["男", "女"]:
+                result["gender"] = t
+            elif re.match(r"\d{2}岁", t):
+                result["age"] = t
+            elif t in ["本科", "硕士", "博士", "大专", "高中"]:
+                result["education"] = t
+            elif re.match(r"工作\d+年", t):
+                result["work_years"] = re.findall(r"\d+", t)[0] + "年"
+
+    # 第三部分：部门 岗位 公司名称
+    if len(parts) > 2:
+        tokens = parts[2].split()
+        if len(tokens) >= 3:
+            # 假设岗位是第2个词
+            result["position"] = tokens[1]
+            result["company"] = " ".join(tokens[2:])
+        elif len(tokens) == 2:
+            result["position"] = tokens[0]
+            result["company"] = tokens[1]
+        elif len(tokens) == 1:
+            result["company"] = tokens[0]
+
+    return result
 
 
 class Resume(models.Model):
@@ -20,9 +68,17 @@ class Resume(models.Model):
     status = models.CharField(
         "状态", max_length=20, choices=STATUS_CHOICES, default="在职，看看新机会"
     )
-    personal_info = models.TextField("个人信息", blank=True)
     phone = models.CharField("电话号码", max_length=11, blank=True)
     email = models.EmailField("邮箱", blank=True)
+
+    # 个人信息及解析结果
+    personal_info = models.TextField("个人信息", blank=True)
+    gender = models.CharField("性别", max_length=2, blank=True)
+    age = models.PositiveIntegerField("年龄", blank=True, null=True)
+    education_level = models.CharField("学历", max_length=10, blank=True)
+    work_years = models.CharField("工作年限", blank=True, max_length=5, default="")
+    company_name = models.CharField("公司", max_length=50, blank=True)
+    position = models.CharField("岗位", max_length=50, blank=True)
 
     # 其他信息
     expected_positions = models.JSONField("期望岗位", default=list, blank=True)
@@ -65,6 +121,17 @@ class Resume(models.Model):
             "status": self.status,
             "expectation": self.expected_positions,
         }
+
+    def save(self, *args, **kwargs):
+        if self.personal_info:
+            parsed = parse_required_info(self.personal_info)
+            self.gender = parsed.get("gender", "")
+            self.age = int(parsed.get("age", "").replace("岁", "") or 0)
+            self.education_level = parsed.get("education", "")
+            self.work_years = parsed.get("work_years", "")
+            self.company_name = parsed.get("company", "")
+            self.position = parsed.get("position", "")
+        super().save(*args, **kwargs)
 
 
 class UploadRecord(models.Model):

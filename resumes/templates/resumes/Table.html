@@ -5,16 +5,20 @@
         </strong>
     </div>
 
-    <table class="table table-bordered table-hover">
+    <div style="overflow-x:auto;">
+    <table class="table table-bordered table-hover" style="min-width:900px; white-space: nowrap;">
         <thead class="table-light">
             <tr>
                 <th>简历编号</th>
-                <th>关联岗位</th>
+                <!-- <th>关联岗位</th> -->
                 <th>姓名</th>
-                <th>个人信息</th>
-                <th>教育</th>
-                <!-- <th>目前状态</th> -->
-                <!-- <th>当前状态</th> -->
+                <th>性别</th>
+                <th>年龄</th>
+                <th>学历</th>
+                <th>工作年限</th>
+                <th>岗位</th>
+                <th>公司名称</th>
+                <!-- <th>教育</th> -->
                 <th>操作</th>
             </tr>
         </thead>
@@ -22,7 +26,7 @@
             {% for resume in resumes %}
             <tr>
                 <td>{{ resume.resume_id }}</td>
-                <td>
+                <!-- <td>
                 {% for job in resume.related_jobs.all %}
                     <a href="{% url 'jobs:job_update' job.id %}" class="badge bg-primary me-1 mb-1 text-decoration-none" target="_blank">
                     {{ job.company|default:"" }} - {{ job.name|default:"" }}
@@ -30,10 +34,27 @@
                 {% empty %}
                     <span class="text-muted">无</span>
                 {% endfor %}
-                </td>
+                </td> -->
                 <td>{{ resume.name }}</td>
-                <td>{{ resume.personal_info|default:"" }}</td>
+                <td>{{ resume.gender|default:"" }}</td>
+                <td>{{ resume.age|default:"" }}</td>
+                <td>{{ resume.education_level|default:"" }}</td>
+                <td>{{ resume.work_years|default:"" }}</td>
                 <td>
+                    {% if resume.position %}
+                    <div>
+                        <span class="badge bg-light text-dark border">{{ resume.position }}</span>
+                    </div>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if resume.company_name %}
+                    <div class="mb-1">
+                        <span class="badge bg-secondary">{{ resume.company_name }}</span>
+                    </div>
+                    {% endif %}
+                </td>
+                <!-- <td>
                 {% for edu in resume.education %}
                     <span class="badge bg-secondary me-1 mb-1">
                     {{ edu.school|default:"未知学校" }}
@@ -43,13 +64,9 @@
                 {% empty %}
                     <span class="text-muted">无</span>
                 {% endfor %}
-                </td>
-                <!-- <td>{{ resume.status }}</td> -->
-                <!-- <td>{{ resume.tags|join:", " }}</td> -->
-                <!-- <td>{{ resume.current_status }}</td> -->
+                </td> -->
                 <td>
                 <a href="{% url 'resume_edit' resume.resume_id %}" class="btn btn-primary me-2 btn-sm btn-small-custom">修改</a>
-                <!-- <a href="{% url 'resume_detail' resume.resume_id %}" class="btn btn-outline-secondary btn-sm btn-small-custom">简历画像</a> -->
                 <a href="https://h.liepin.com/resume/showresumedetail/?showsearchfeedback=1&res_id_encode={{ resume.resume_id }}" class="btn btn-outline-info btn-sm btn-small-custom" target="_blank">链接</a>
                 {% if is_staff %}
                     <button class="btn btn-danger btn-sm delete-resume-btn" data-resume-id="{{ resume.resume_id }}">
@@ -57,14 +74,15 @@
                     </button>
                 {% endif %}
                 </td>
-
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="text-center">没有找到匹配的简历</td>
+                <td colspan="11" class="text-center">没有找到匹配的简历</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
+
 {% include "components/Pager.html" %}

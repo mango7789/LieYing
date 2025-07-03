@@ -273,15 +273,6 @@ def match_result(request, job_id):
 
         for m in matchings:
             resume = m.resume
-            work_exp = resume.working_experiences or []
-            if work_exp:
-                latest_job = work_exp[0]
-                current_company = latest_job.get("company", "")
-                current_position = latest_job.get("job_name", "")
-            else:
-                current_company = ""
-                current_position = ""
-
             resumes_data.append(
                 {
                     "resume_id": resume.resume_id,
@@ -290,8 +281,12 @@ def match_result(request, job_id):
                     "match_score_percent": round((m.score or 0) * 10, 1),
                     "status": resume.status,
                     "match_status": m.status,
-                    "current_company": current_company,
-                    "current_position": current_position,
+                    "current_company": resume.company_name,
+                    "current_position": resume.position,
+                    "gender": resume.gender,
+                    "age": resume.age,
+                    "education_level": resume.education_level,
+                    "work_years": resume.work_years,
                 }
             )
 
