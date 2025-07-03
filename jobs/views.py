@@ -40,7 +40,11 @@ def job_list(request, company):
     # 添加匹配状态逻辑
     # TODO: 对匹配中的岗位增加匹配进度的展示
     for job in jobs:
-        job.task_status = get_job_match_status(job.id)
+        task_status, processing, total = get_job_match_status(job.id)
+        job.task_status = task_status
+        job.processing = processing
+        job.total = total
+        job.percent = int(processing * 100 / total) if total else 0
 
     return render(request, "jobs/job_list.html", {"jobs": jobs, "company": company})
 
@@ -75,8 +79,32 @@ def get_job_match_status(job_id):
         status = "失败"
 
     logging.debug(summary)
-    return status
-    return {"status": status, "summary": summary}
+    # return status
+    return status, summary["completed"], summary["total"]
+
+
+@login_required
+def match_status_api(request, company):
+    """
+    Used for providing match status(progress bar) for jobs within a given company.
+    """
+    jobs = JobPosition.objects.filter(company=company).values("id")
+    data = []
+
+    for job in jobs:
+        task_status, processing, total = get_job_match_status(job["id"])
+        percent = int(processing * 100 / total) if total else 0
+        data.append(
+            {
+                "id": job["id"],
+                "status": task_status,
+                "processing": processing,
+                "total": total,
+                "percent": percent,
+            }
+        )
+
+    return JsonResponse({"jobs": data})
 
 
 ###########################################################
@@ -229,9 +257,6 @@ def start_matching(request, job_id):
 
     # GET请求显示确认页面
     return render(request, "jobs/start_matching_confirm.html", {"job": job})
-
-
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 @login_required

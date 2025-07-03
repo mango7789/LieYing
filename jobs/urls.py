@@ -16,4 +16,9 @@ urlpatterns = [
     path("delete/<int:pk>/", views.job_delete, name="job_delete"),
     path("match/start/<int:job_id>/", views.start_matching, name="start_matching"),
     path("match/result/<int:job_id>/", views.match_result, name="match_result"),
+    path(
+        "<str:company>/match_status_api/",
+        views.match_status_api,
+        name="match_status_api",
+    ),
 ]

@@ -56,6 +56,7 @@
             <div class="nav-links ms-auto d-flex align-items-center gap-2">
                 {% if user.is_authenticated %}
                     <span class="fw-semibold">你好，{{ user.username }}</span>
+                    <a href="{% url 'profile' %}" class="btn btn-outline-secondary btn-sm">我的资料</a>
                     <form method="post" action="{% url 'logout' %}" class="m-0">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-danger btn-sm">登出</button>

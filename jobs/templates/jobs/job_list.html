@@ -2,13 +2,13 @@
 
 {% block content %}
 <section class="features">
-    <!-- 上面一行，中间居中标题 -->
+    <!-- 标题 -->
     <div class="text-center mb-3">
         <h2 class="mb-0">{{ company }} - 在招职位</h2>
         <p class="text-muted mb-0">共 {{ jobs|length }} 个职位</p>
     </div>
 
-    <!-- 下面一行，左右分布按钮 -->
+    <!-- 顶部按钮 -->
     <div class="d-flex justify-content-between mb-4">
         <a href="{% url 'jobs:company_list' %}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i> 返回公司列表
@@ -16,9 +16,7 @@
         <a href="{% url 'jobs:job_create' company=company %}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i> 新增职位
         </a>
-
     </div>
-
 
     {% if jobs %}
     <div class="table-responsive">
@@ -35,49 +33,69 @@
             </thead>
             <tbody>
                 {% for job in jobs %}
-                <tr>
+                <tr data-job-id="{{ job.id }}">
                     <td>{{ job.name }}</td>
                     <td>{{ job.city }}</td>
                     <td>{{ job.salary|default:"面议" }}</td>
                     <td>{{ job.created_at|date:"Y-m-d" }}</td>
-                    <td>
+                    <td class="match-status-cell">
                         {% if job.task_status == '已完成' %}
-                            <span class="badge bg-success">已匹配</span>
+                            <span class="badge bg-success fixed-width-badge">已完成</span>
                         {% elif job.task_status == '匹配中' %}
-                            <span class="badge bg-warning text-dark">匹配中</span>
+                            <div style="width: 140px; margin: 0 auto;">
+                                <span class="badge bg-warning fixed-width-badge">匹配中</span>
+                                {% if job.processing and job.total %}
+                                    <div class="progress" style="height: 20px; width: 120px; position: relative; margin: 0 auto;">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                            role="progressbar"
+                                            style="width: {{ job.percent }}%;"
+                                            aria-valuenow="{{ job.processing }}"
+                                            aria-valuemin="0"
+                                            aria-valuemax="{{ job.total }}">
+                                        </div>
+                                        <span style="
+                                            position: absolute;
+                                            top: 50%;
+                                            left: 50%;
+                                            transform: translate(-50%, -50%);
+                                            color: black;
+                                            font-weight: 600;
+                                            user-select: none;
+                                        ">
+                                            {{ job.processing }} / {{ job.total }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </div>
                         {% elif job.task_status == '未开始' %}
-                            <span class="badge bg-secondary">未匹配</span>
+                            <span class="badge bg-secondary fixed-width-badge">未匹配</span>
                         {% else %}
-                            <span class="badge bg-danger">失败</span>
+                            <span class="badge bg-danger fixed-width-badge">失败</span>
                         {% endif %}
-                        </td>
+                    </td>
                     <td>
                         <div class="d-flex gap-2 flex-wrap">
-                            <!-- 开始匹配按钮 -->
                             {% if job.task_status != '匹配中' and job.task_status != '已完成' %}
                             <form method="post" action="{% url 'jobs:start_matching' job.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-play-fill me-1"></i>开始匹配
-                            </button>
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-play-fill me-1"></i>开始匹配
+                                </button>
                             </form>
                             {% endif %}
 
-                            <!-- 查看结果按钮 -->
                             {% if job.task_status == '已完成' %}
                             <a href="{% url 'jobs:match_result' job.id %}" class="btn btn-sm btn-outline-success">
-                            <i class="bi bi-eye me-1"></i>查看结果
+                                <i class="bi bi-eye me-1"></i>查看结果
                             </a>
                             {% endif %}
 
-                            <!-- 编辑按钮 -->
                             <a href="{% url 'jobs:job_update' job.id %}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-pencil me-1"></i>编辑
+                                <i class="bi bi-pencil me-1"></i>编辑
                             </a>
 
-                            <!-- 删除按钮 -->
                             <button class="btn btn-sm btn-outline-danger delete-job-btn" data-job-id="{{ job.id }}">
-                            <i class="bi bi-trash me-1"></i>删除
+                                <i class="bi bi-trash me-1"></i>删除
                             </button>
                         </div>
                     </td>
@@ -117,7 +135,7 @@
 </div>
 
 <script>
-    // 删除职位确认
+    // 删除职位确认弹窗
     document.querySelectorAll('.delete-job-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             const jobId = this.dataset.jobId;
@@ -132,5 +150,83 @@
             modal.show();
         });
     });
+
+    // 定时刷新匹配进度
+    function updateMatchProgress() {
+        fetch("{% url 'jobs:match_status_api' company=company %}")
+            .then(response => response.json())
+            .then(data => {
+                data.jobs.forEach(job => {
+                    const row = document.querySelector(`tr[data-job-id="${job.id}"]`);
+                    if (!row) return;
+
+                    const cell = row.querySelector(".match-status-cell");
+                    if (!cell) return;
+
+                    let html = "";
+                    if (job.status === "已完成") {
+                        html = `<span class="badge bg-success fixed-width-badge">已完成</span>`;
+                    } else if (job.status === "匹配中") {
+                        html = `
+                            <div style="width: 120px; margin: 0 auto; position: relative;">
+                                <span class="badge bg-warning mb-1" style="width: 100%; display: block;">匹配中</span>
+                                <div class="progress" style="height: 20px; position: relative;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                        role="progressbar"
+                                        style="width: ${job.percent}%;"
+                                        aria-valuenow="${job.processing}"
+                                        aria-valuemin="0"
+                                        aria-valuemax="${job.total}">
+                                    </div>
+                                    <span style="
+                                        position: absolute;
+                                        top: 50%;
+                                        left: 50%;
+                                        transform: translate(-50%, -50%);
+                                        color: black;
+                                        font-weight: 600;
+                                        user-select: none;
+                                    ">
+                                        ${job.processing} / ${job.total}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+
+                    } else if (job.status === "未开始") {
+                        html = `<span class="badge bg-secondary fixed-width-badge">未匹配</span>`;
+                    } else {
+                        html = `<span class="badge bg-danger fixed-width-badge">失败</span>`;
+                    }
+
+                    cell.innerHTML = html;
+                });
+            });
+    }
+
+    // 页面加载后立即执行一次，之后每5秒刷新一次
+    updateMatchProgress();
+    setInterval(updateMatchProgress, 5000);
 </script>
+
+<style>
+  /* 让 badge 固定宽度并居中 */
+  .fixed-width-badge {
+    display: inline-block;
+    width: 120px;         /* 固定宽度 */
+    text-align: center;   /* 文字居中 */
+    font-weight: 600;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  /* 让 td 内内容居中 */
+  td.match-status-cell {
+    text-align: center;
+    vertical-align: middle;  /* 垂直居中 */
+  }
+</style>
+
+
+
 {% endblock %}

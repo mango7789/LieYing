@@ -39,6 +39,11 @@ class Matching(models.Model):
     scored_at = models.DateTimeField("打分时间", auto_now_add=True)
     updated_at = models.DateTimeField("更新时间", auto_now=True)
 
+    reason = models.TextField("匹配原因", blank=True)
+    strengths = models.TextField("简历长处", blank=True)
+    weaknesses = models.TextField("简历短处", blank=True)
+    suggestions = models.TextField("改进建议", blank=True)
+
     class Meta:
         verbose_name = "简历岗位匹配"
         verbose_name_plural = "简历岗位匹配"
@@ -49,7 +54,7 @@ class Matching(models.Model):
 
     def save(self, *args, **kwargs):
         if self.score is not None:
-            self.task_status_CHOICES = "已完成"
+            self.task_status = "已完成"
         super().save(*args, **kwargs)
 
 

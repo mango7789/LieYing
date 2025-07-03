@@ -6,6 +6,7 @@ from .models import Matching, JobMatchTask
 from .matcher import ResumeJobMatcher
 from django.db import transaction
 from django.core.cache import cache
+from django.conf import settings
 from celery import shared_task
 from celery.signals import worker_ready
 
@@ -21,7 +22,7 @@ logger.addHandler(handler)
 
 
 ###########################################################
-#                        Utility                          #
+#                      Mutex Lock                         #
 ###########################################################
 def acquire_lock(key: str, timeout: int = 60) -> bool:
     """
@@ -144,20 +145,27 @@ def run_matching_for_job(job_id: int):
                 "task_status": "匹配中",
             },
         )
+        if settings.DEBUG:
+            obj.task_status = "匹配中"
+            obj.score = None
+            obj.save()
+
         # Only update match records with non-finished status and empty score
-        if not created:
-            if obj.task_status != "已完成":
-                if obj.score is None:
-                    obj.score_source = "自动打分器"
-                    obj.task_status = "匹配中"
-                    obj.save(update_fields=["score_source", "task_status"])
+        elif not created:
+            if (
+                (obj.task_status != "已完成" and obj.score is None)
+                or job.updated_at > obj.updated_at
+                or resume.updated_at > obj.updated_at
+            ):
+                obj.score_source = "自动打分器"
+                obj.task_status = "匹配中"
+                obj.save(update_fields=["score_source", "task_status"])
 
     if not hasattr(run_resume_job_matching, "_matcher"):
         run_resume_job_matching._matcher = ResumeJobMatcher()
 
     matcher = run_resume_job_matching._matcher
 
-    matcher = ResumeJobMatcher()
     total = resumes.count()
     processed_count = 0
     failed_count = 0
@@ -166,7 +174,7 @@ def run_matching_for_job(job_id: int):
         try:
             existing = Matching.objects.filter(resume=resume, job=job).first()
             if existing:
-                if existing.task_status == "已完成":
+                if existing.task_status == "已完成" and not settings.DEBUG:
                     continue
 
             # existing.task_status = "匹配中"
@@ -174,12 +182,20 @@ def run_matching_for_job(job_id: int):
 
             result = matcher.evaluate_match(resume.to_json(), job.to_json())
             score = result.get("initial_score", None)
+            reason = result.get("reason", "")
+            strengths = result.get("strengths", "")
+            weaknesses = result.get("weaknesses", "")
+            suggestions = result.get("suggestions", "")
 
             with transaction.atomic():
                 existing.score = score
                 existing.score_source = "自动打分器"
                 existing.status = "进入初筛" if score and score > 5 else "未过分数筛选"
                 existing.task_status = "已完成" if score is not None else "匹配中"
+                existing.reason = reason
+                existing.strengths = strengths
+                existing.weaknesses = weaknesses
+                existing.suggestions = suggestions
                 existing.save()
 
                 task.last_processed_resume_id = resume.resume_id

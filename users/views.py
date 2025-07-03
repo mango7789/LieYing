@@ -1,10 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 from django.views.generic import RedirectView
 from django.conf import settings
+
+from .forms import UserUpdateForm, CustomPasswordChangeForm
 from resumes.models import Resume
 from jobs.models import JobPosition
 from users.models import UserProfile
@@ -43,6 +46,7 @@ def custom_login_view(request):
     return render(request, "users/User_Login.html")
 
 
+@login_required
 def custom_logout_view(request):
     logout(request)
     messages.info(request, "你已成功登出。")
@@ -59,6 +63,7 @@ def custom_register_view(request):
     return render(request, "users/User_register.html", {"form": form})
 
 
+@login_required
 def home_view(request):
     resume_count = Resume.objects.count()
     job_count = JobPosition.objects.count()
@@ -73,4 +78,31 @@ def home_view(request):
             "user_count": user_count,
             "matching_count": matching_count,
         },
+    )
+
+
+@login_required
+def profile_view(request):
+    user = request.user
+
+    if request.method == "POST":
+        user_form = UserUpdateForm(request.POST, instance=user)
+        pwd_form = CustomPasswordChangeForm(user=user, data=request.POST)
+
+        if "update_profile" in request.POST and user_form.is_valid():
+            user_form.save()
+            messages.success(request, "资料更新成功")
+            return redirect("profile")
+
+        elif "change_password" in request.POST and pwd_form.is_valid():
+            pwd_form.save()
+            update_session_auth_hash(request, pwd_form.user)
+            messages.success(request, "密码修改成功")
+            return redirect("profile")
+    else:
+        user_form = UserUpdateForm(instance=user)
+        pwd_form = CustomPasswordChangeForm(user=user)
+
+    return render(
+        request, "users/profile.html", {"user_form": user_form, "pwd_form": pwd_form}
     )

@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     "resumes",
     "jobs",
     "match",
-    "django_apscheduler",
+    "crispy_forms",
+    "crispy_bootstrap5",
 ]
 
 MIDDLEWARE = [
@@ -199,3 +200,6 @@ CACHES = {
         },
     }
 }
+
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap5"]
