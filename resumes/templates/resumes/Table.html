@@ -68,13 +68,15 @@
                 {% endfor %}
                 </td> -->
                 <td>
-                <a href="{% url 'resume_edit' resume.resume_id %}" class="btn btn-primary me-2 btn-sm btn-small-custom">修改</a>
-                <a href="https://h.liepin.com/resume/showresumedetail/?showsearchfeedback=1&res_id_encode={{ resume.resume_id }}" class="btn btn-outline-info btn-sm btn-small-custom" target="_blank">链接</a>
-                {% if is_staff %}
-                    <button class="btn btn-danger btn-sm delete-resume-btn" data-resume-id="{{ resume.resume_id }}">
-                        删除
-                    </button>
-                {% endif %}
+                    <div class="d-flex">
+                        <a href="{% url 'resume_edit' resume.resume_id %}" class="btn btn-primary btn-sm btn-small-custom btn-spacing">修改</a>
+                        <a href="https://h.liepin.com/resume/showresumedetail/?showsearchfeedback=1&res_id_encode={{ resume.resume_id }}" class="btn btn-outline-info btn-sm btn-small-custom btn-spacing" target="_blank">链接</a>
+                        {% if is_staff %}
+                        <button class="btn btn-outline-danger btn-sm btn-small-custom btn-spacing delete-resume-btn" data-resume-id="{{ resume.resume_id }}">
+                            删除
+                        </button>
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
             {% empty %}
@@ -87,4 +89,15 @@
     </div>
 </div>
 
+<style>
+    .btn-spacing {
+        margin-right: 8px; /* 统一右侧间距 */
+    }
+
+    /* 去掉最后一个按钮的右边距，防止多余空隙 */
+    .d-flex > .btn-spacing:last-child {
+        margin-right: 0;
+    }
+
+</style>
 {% include "components/Pager.html" %}

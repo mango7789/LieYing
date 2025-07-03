@@ -1,5 +1,5 @@
 import os, re, json, logging
-from django.db.models import Q
+from django.db.models import Case, When, IntegerField, Value, Q
 from django.contrib import messages
 from django.http import JsonResponse
 from django.conf import settings
@@ -55,10 +55,21 @@ def resume_list(request):
         qs = qs.filter(personal_info__icontains=city)
 
     if work_years != "不限" and work_years:
-        qs = qs.filter(tags__icontains=work_years)
+        min_years, max_years = WORKING_Y_RANGES.get(work_years, (0, 1000))
+        qs = qs.filter(work_years_num__gte=min_years, work_years_num__lte=max_years)
 
     if education != "不限" and education:
-        qs = qs.filter(education__icontains=education)
+        selected_level = EDUCATION_LEVELS.get(education, 0)
+        qs = qs.annotate(
+            edu_level=Case(
+                When(education_level__icontains="博士", then=Value(4)),
+                When(education_level__icontains="硕士", then=Value(3)),
+                When(education_level__icontains="本科", then=Value(2)),
+                When(education_level__icontains="大专", then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        ).filter(edu_level__gte=selected_level)
 
     # TODO: 根据 tags 进一步筛选
 

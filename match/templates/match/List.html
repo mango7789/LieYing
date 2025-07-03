@@ -31,35 +31,34 @@
     <table class="table table-bordered table-hover">
       <thead class="table-light">
         <tr>
-          <th>简历 ID</th>
-          <th>岗位名称</th>
-          <th>状态</th>
-          <th>分数</th>
-          <th>分数来源</th>
-          <th>最后更新时间</th>
+          {% for col, label in columns %}
+            <th>
+              {% if sort == col and order == 'asc' %}
+                <a href="?{% if query %}q={{ query }}&{% endif %}sort={{ col }}&order=desc">{{ label }} ▲</a>
+              {% elif sort == col and order == 'desc' %}
+                <a href="?{% if query %}q={{ query }}&{% endif %}sort={{ col }}&order=asc">{{ label }} ▼</a>
+              {% else %}
+                <a href="?{% if query %}q={{ query }}&{% endif %}sort={{ col }}&order=asc">{{ label }}</a>
+              {% endif %}
+            </th>
+          {% endfor %}
         </tr>
       </thead>
+
       <tbody>
         {% for record in page_obj.object_list %}
-        <tr>
-          <td>
-            <a href="{% url 'resume_edit' record.resume.resume_id %}">
-              {{ record.resume.resume_id }}
-            </a>
-          </td>
-          <td>
-            <a class="badge bg-primary me-1 mb-1 text-decoration-none" target="_blank">
-              {{ record.job.company|default:"" }} - {{ record.job.name|default:"" }}
-            </a>
-          </td>
-          <td>{{ record.task_status }}</td>
-          <td>{{ record.score|default:"-" }}</td>
-          <td>{{ record.score_source|default:"-" }}</td>
-          <td>{{ record.updated_at|date:"Y-m-d H:i:s" }}</td>
-        </tr>
+          <tr>
+            <td><a href="{% url 'resume_edit' record.resume.resume_id %}">{{ record.resume.resume_id }}</a></td>
+            <td><a class="badge bg-primary me-1 mb-1 text-decoration-none" target="_blank">{{ record.job.company|default:"" }} - {{ record.job.name|default:"" }}</a></td>
+            <td>{{ record.task_status }}</td>
+            <td>{{ record.score|default:"-" }}</td>
+            <td>{{ record.score_source|default:"-" }}</td>
+            <td>{{ record.updated_at|date:"Y-m-d H:i:s" }}</td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
+
 
     {% include "components/Pager.html" %}
   {% else %}

@@ -22,13 +22,35 @@ from match.services import async_run_matching_for_job
 
 @login_required
 def company_list(request):
-    # 按公司分组，统计职位数量和最新创建时间
-    companies = (
-        JobPosition.objects.values("company")
-        .annotate(job_count=Count("id"), latest_created=Max("created_at"))
-        .order_by("-latest_created")
+    company_jobs = JobPosition.objects.order_by("-created_at").values(
+        "company", "id", "name", "created_at"
     )
 
+    company_dict = {}
+    for job in company_jobs:
+        company = job["company"]
+        if company not in company_dict:
+            company_dict[company] = {
+                "company": company,
+                "job_count": 0,
+                "latest_created": job["created_at"],
+                "jobs": [],
+            }
+        if len(company_dict[company]["jobs"]) < 3:
+            company_dict[company]["jobs"].append(job)
+
+        company_dict[company]["job_count"] += 1
+        company_dict[company]["latest_created"] = max(
+            company_dict[company]["latest_created"], job["created_at"]
+        )
+
+        task_status, processing, total = get_job_match_status(job["id"])
+        job["task_status"] = task_status
+        # job["processing"] = processing
+        # job["total"] = total
+        job["percent"] = round(processing / total * 100, 2)
+
+    companies = list(company_dict.values())
     return render(request, "jobs/company_list.html", {"companies": companies})
 
 

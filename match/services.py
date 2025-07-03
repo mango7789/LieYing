@@ -161,6 +161,7 @@ def run_matching_for_job(job_id: int):
                 obj.task_status = "匹配中"
                 obj.save(update_fields=["score_source", "task_status"])
 
+    # Load matcher
     if not hasattr(run_resume_job_matching, "_matcher"):
         run_resume_job_matching._matcher = ResumeJobMatcher()
 

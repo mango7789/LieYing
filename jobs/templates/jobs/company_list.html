@@ -5,16 +5,12 @@
     <div class="section-title">
         <div>
             <h2>公司列表</h2>
-            <!-- <p class="text-muted">按公司分组查看在招职位</p> -->
         </div>
-        <!-- <a href="{% url 'jobs:job_create_general' %}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i> 新增岗位
-        </a> -->
     </div>
 
     {% if companies %}
     <div class="table-responsive">
-        <table class="table table-bordered table-hover">
+        <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
                 <tr>
                     <th>公司名称</th>
@@ -35,9 +31,112 @@
                         <td>{{ company.job_count }}</td>
                         <td>{{ company.latest_created|date:"Y-m-d" }}</td>
                         <td>
-                            <a href="{% url 'jobs:job_list' company=company.company %}" class="btn btn-sm btn-outline-primary">
-                                查看职位
-                            </a>
+                            <div class="d-flex justify-content-start align-items-center gap-2">
+                                <button class="btn btn-sm btn-outline-primary toggle-btn"
+                                        style="white-space: nowrap;"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#jobs-{{ forloop.counter }}"
+                                        aria-expanded="false"
+                                        aria-controls="jobs-{{ forloop.counter }}">
+                                    展开岗位
+                                </button>
+
+                                <a href="{% url 'jobs:job_list' company=company.company %}" class="btn btn-sm btn-outline-secondary">
+                                    查看所有岗位 (共 {{ company.job_count }} 个)
+                                </a>
+                            </div>
+                        </td>
+
+                    </tr>
+                    <tr class="collapse" id="jobs-{{ forloop.counter }}">
+                        <td colspan="4" class="p-0">
+                            <div class="p-3 bg-light border-top slide-container">
+                                <ul class="list-group mb-2" id="job-list-{{ forloop.counter }}">
+                                {% for job in company.jobs %}
+                                    <li class="list-group-item" data-index="{{ forloop.counter0 }}" style="{% if forloop.counter > 3 %}display:none{% endif %}">
+                                    <!-- 岗位内容，保持你原来的结构 -->
+                                    <div class="row align-items-center">
+                                        <div class="col-md-4 fw-semibold">
+                                        {{ job.name }}
+                                        <span class="text-muted small ms-2">{{ job.created_at|date:"Y-m-d" }}</span>
+                                        </div>
+                                        <div class="col-md-4 text-center match-status-cell">
+                                        <!-- 匹配状态展示，保持原来逻辑 -->
+                                        {% if job.task_status == '已完成' %}
+                                            <span class="badge bg-success fixed-width-badge">已完成</span>
+                                        {% elif job.task_status == '匹配中' %}
+                                            <div style="width: 160px; position: relative;" class="mx-auto">
+                                            <span class="badge bg-warning fixed-width-badge">匹配中</span>
+                                            {% if job.processing and job.total %}
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                                    role="progressbar"
+                                                    style="width: {{ job.percent }}%;"
+                                                    aria-valuenow="{{ job.processing }}"
+                                                    aria-valuemin="0"
+                                                    aria-valuemax="{{ job.total }}">
+                                                </div>
+                                                <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                                                            color: black; font-weight: 600; white-space: nowrap;">
+                                                {{ job.processing }}/{{ job.total }} ({{ job.percent }}%)
+                                                </span>
+                                            </div>
+                                            {% endif %}
+                                            </div>
+                                        {% elif job.task_status == '未开始' %}
+                                            <span class="badge bg-secondary fixed-width-badge">未匹配</span>
+                                        {% else %}
+                                            <span class="badge bg-danger fixed-width-badge">失败</span>
+                                        {% endif %}
+                                        </div>
+                                            <div class="col-md-4 d-flex flex-wrap gap-2 justify-content-md-end justify-content-center">
+                                            {% if job.task_status != '匹配中' and job.task_status != '已完成' %}
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#startMatchingModal"
+                                                data-job-id="{{ job.id }}"
+                                                data-job-name="{{ job.name }}"
+                                                data-job-company="{{ job.company }}"
+                                                data-job-city="{{ job.city }}">
+                                                <i class="bi bi-play-fill me-1"></i>开始匹配
+                                            </button>
+                                            {% endif %}
+
+                                            <a href="{% url 'jobs:match_result' job.id %}" class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-eye me-1"></i>结果
+                                            </a>
+
+                                            <a href="{% url 'jobs:job_update' job.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-pencil me-1"></i>编辑
+                                            </a>
+
+                                            <button class="btn btn-sm btn-outline-danger delete-job-btn" data-job-id="{{ job.id }}">
+                                                <i class="bi bi-trash me-1"></i>删除
+                                            </button>
+                                        </div>
+                                    </div>
+                                    </li>
+                                {% endfor %}
+
+                                {% if company.job_count > 3 %}
+                                <li class="list-group-item text-center">
+                                    <button class="btn btn-sm btn-outline-primary load-more-btn" data-target="#job-list-{{ forloop.counter }}">
+                                    加载更多岗位
+                                    </button>
+                                </li>
+                                {% endif %}
+                                </ul>
+                                {% if company.job_count > 3 %}
+                                <div class="text-center">
+                                    <a href="{% url 'jobs:job_list' company=company.company %}" class="btn btn-sm btn-outline-secondary">
+                                        查看更多岗位 (共 {{ company.job_count }} 个)
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endif %}
@@ -51,4 +150,72 @@
     </div>
     {% endif %}
 </section>
+
+<style>
+    /* 下拉动画容器 */
+    .slide-container {
+        animation: slideDown 0.25s ease-in-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .toggle-btn {
+        min-width: 100px;
+        white-space: nowrap;
+    }
+
+    .list-group-item {
+        padding: 0.5rem 1rem;
+    }
+
+    .slide-container {
+        will-change: height, opacity;
+        backface-visibility: hidden;
+        transform: translateZ(0);
+    }
+</style>
+
+<script>
+document.querySelectorAll('.toggle-btn').forEach(button => {
+  const targetSelector = button.getAttribute('data-bs-target');
+  const collapseElement = document.querySelector(targetSelector);
+  if (!collapseElement) return;
+
+  collapseElement.addEventListener('show.bs.collapse', () => {
+    if(button.textContent !== '收起岗位'){
+      button.textContent = '收起岗位';
+    }
+  });
+
+  collapseElement.addEventListener('hide.bs.collapse', () => {
+    if(button.textContent !== '展开岗位'){
+      button.textContent = '展开岗位';
+    }
+  });
+});
+
+document.querySelectorAll('.load-more-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const ul = document.querySelector(btn.dataset.target);
+    if (!ul) return;
+
+    const hiddenItems = ul.querySelectorAll('li.list-group-item[style*="display:none"]');
+    hiddenItems.forEach(item => item.style.display = 'block');
+
+    btn.style.display = 'none'; // 隐藏“加载更多”按钮
+  });
+});
+
+</script>
+
+
 {% endblock %}
