@@ -16,6 +16,7 @@ def parse_required_info(info_str):
         "work_years": "",
         "position": "",
         "company": "",
+        "city": "",
     }
     if not info_str:
         return result
@@ -34,6 +35,8 @@ def parse_required_info(info_str):
                 result["education"] = t
             elif re.match(r"工作\d+年", t):
                 result["work_years"] = re.findall(r"\d+", t)[0] + "年"
+
+        result["city"] = tokens[2]
 
     # 第三部分：部门 岗位 公司名称
     if len(parts) > 2:
@@ -79,6 +82,7 @@ class Resume(models.Model):
     work_years = models.CharField("工作年限", blank=True, max_length=5, default="")
     company_name = models.CharField("公司", max_length=50, blank=True)
     position = models.CharField("岗位", max_length=50, blank=True)
+    city = models.CharField("城市", max_length=20, blank=True)
 
     # 其他信息
     expected_positions = models.JSONField("期望岗位", default=list, blank=True)
@@ -131,6 +135,7 @@ class Resume(models.Model):
             self.work_years = parsed.get("work_years", "")
             self.company_name = parsed.get("company", "")
             self.position = parsed.get("position", "")
+            self.city = parsed.get("city", "")
         super().save(*args, **kwargs)
 
 

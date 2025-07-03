@@ -62,6 +62,7 @@ def resume_list(request):
 
     # TODO: 根据 tags 进一步筛选
 
+    # TODO: 调整教育背景和工作年限的筛选规则
     if keyword:
         qs = qs.filter(
             Q(personal_info__icontains=keyword)

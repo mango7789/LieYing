@@ -76,19 +76,23 @@
                     <td>
                         <div class="d-flex gap-2 flex-wrap">
                             {% if job.task_status != '匹配中' and job.task_status != '已完成' %}
-                            <form method="post" action="{% url 'jobs:start_matching' job.id %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-play-fill me-1"></i>开始匹配
-                                </button>
-                            </form>
+                            <button
+                                type="button"
+                                class="btn btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#startMatchingModal"
+                                data-job-id="{{ job.id }}"
+                                data-job-name="{{ job.name }}"
+                                data-job-company="{{ job.company }}"
+                                data-job-city="{{ job.city }}"
+                            >
+                            <i class="bi bi-play-fill me-1"></i>开始匹配
+                            </button>
                             {% endif %}
 
-                            {% if job.task_status == '已完成' %}
                             <a href="{% url 'jobs:match_result' job.id %}" class="btn btn-sm btn-outline-success">
                                 <i class="bi bi-eye me-1"></i>查看结果
                             </a>
-                            {% endif %}
 
                             <a href="{% url 'jobs:job_update' job.id %}" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-pencil me-1"></i>编辑
@@ -101,6 +105,7 @@
                     </td>
                 </tr>
                 {% endfor %}
+                {% include 'jobs/start_matching_confirm.html' %}
             </tbody>
         </table>
     </div>

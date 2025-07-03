@@ -9,6 +9,7 @@
         <th>年龄</th>
         <th>学历</th>
         <th>工作年限</th>
+        <th>所在城市</th>
         <th>当前公司 / 职位</th>
         <th>操作</th>
     </tr>
@@ -35,9 +36,10 @@
         </td>
 
         <td>{{ resume.gender }}</td>
-        <td>{{ resume.age }}{% if resume.age %} 岁{% endif %}</td>
+        <td>{{ resume.age }}</td>
         <td>{{ resume.education_level }}</td>
         <td>{{ resume.work_years }}</td>
+        <td>{{ resume.city }}</td>
 
         <td>
             {% if resume.current_company %}

@@ -1,43 +1,65 @@
-{% extends "Layout.html" %}
-
-{% block content %}
-<div class="container my-5">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">
-                <i class="bi bi-play-circle me-2"></i>开始匹配确认
-            </h3>
+<!-- 开始匹配确认弹窗 -->
+<div class="modal fade" id="startMatchingModal" tabindex="-1" aria-labelledby="startMatchingModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" id="startMatchingForm">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="startMatchingModalLabel">
+            <i class="bi bi-play-circle me-2"></i>开始匹配确认
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="关闭"></button>
         </div>
-        <div class="card-body">
-            <div class="alert alert-info">
-                <h5>确认开始匹配以下职位：</h5>
-                <div class="mt-3">
-                    <strong>{{ job.name }}</strong><br>
-                    <span class="text-muted">{{ job.company }} · {{ job.city }}</span>
-                </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <h5>确认开始匹配以下职位：</h5>
+            <div class="mt-3">
+              <strong id="modalJobName"></strong><br>
+              <span class="text-muted" id="modalJobCompanyCity"></span>
             </div>
+          </div>
 
-            <div class="alert alert-warning">
-                <h6><i class="bi bi-exclamation-triangle me-2"></i>注意事项：</h6>
-                <ul class="mb-0">
-                    <li>匹配过程可能需要几分钟时间</li>
-                    <li>系统将自动分析简历库中的候选人</li>
-                    <li>匹配完成后可以查看详细结果</li>
-                </ul>
-            </div>
-
-            <form method="post">
-                {% csrf_token %}
-                <div class="d-flex justify-content-between mt-4">
-                    <a href="{% url 'jobs:job_list' company=job.company %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>取消
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-play-fill me-1"></i>确认开始匹配
-                    </button>
-                </div>
-            </form>
+          <div class="alert alert-warning">
+            <h6><i class="bi bi-exclamation-triangle me-2"></i>注意事项：</h6>
+            <ul class="mb-0">
+              <li>匹配过程可能需要几分钟时间</li>
+              <li>系统将自动分析简历库中的候选人</li>
+              <li>匹配完成后可以查看详细结果</li>
+            </ul>
+          </div>
         </div>
-    </div>
+        <div class="modal-footer">
+          <a href="#" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-arrow-left me-1"></i>取消
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-play-fill me-1"></i>确认开始匹配
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
-{% endblock %} 
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const modalEl = document.getElementById('startMatchingModal')
+  const jobNameEl = document.getElementById('modalJobName')
+  const jobInfoEl = document.getElementById('modalJobCompanyCity')
+  const formEl = document.getElementById('startMatchingForm')
+
+  modalEl.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget
+    if (!button) return;
+
+    const jobId = button.getAttribute('data-job-id')
+    const jobName = button.getAttribute('data-job-name')
+    const jobCompany = button.getAttribute('data-job-company')
+    const jobCity = button.getAttribute('data-job-city')
+
+    jobNameEl.textContent = jobName
+    jobInfoEl.textContent = `${jobCompany} · ${jobCity}`
+    formEl.action = `/job/match/start/${jobId}/`
+  })
+})
+</script>

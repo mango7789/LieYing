@@ -243,20 +243,16 @@ def job_delete(request, pk):
 @login_required
 @require_POST
 def start_matching(request, job_id):
-    """开始匹配功能"""
+    """开始匹配功能，直接处理POST请求启动任务"""
     job = get_object_or_404(JobPosition, pk=job_id)
 
-    if request.method == "POST":
-        try:
-            async_run_matching_for_job.delay(job_id)
-            messages.success(request, f'岗位"{job.name}"匹配任务已启动。')
-        except Exception as e:
-            messages.error(request, f"启动匹配失败：{str(e)}")
+    try:
+        async_run_matching_for_job.delay(job_id)
+        messages.success(request, f'岗位"{job.name}"匹配任务已启动。')
+    except Exception as e:
+        messages.error(request, f"启动匹配失败：{str(e)}")
 
-        return redirect("jobs:job_list", company=job.company)
-
-    # GET请求显示确认页面
-    return render(request, "jobs/start_matching_confirm.html", {"job": job})
+    return redirect("jobs:job_list", company=job.company)
 
 
 @login_required
@@ -266,7 +262,9 @@ def match_result(request, job_id):
 
     try:
         matchings = (
-            Matching.objects.select_related("resume").filter(job=job).order_by("-score")
+            Matching.objects.select_related("resume")
+            .filter(job=job, task_status="已完成")
+            .order_by("-score")
         )
 
         resumes_data = []
@@ -287,6 +285,7 @@ def match_result(request, job_id):
                     "age": resume.age,
                     "education_level": resume.education_level,
                     "work_years": resume.work_years,
+                    "city": resume.city,
                 }
             )
 

@@ -57,14 +57,24 @@
 
     <!-- 重新匹配按钮 -->
     <div class="text-center mt-4">
-        <form method="post" action="{% url 'jobs:start_matching' job.id %}" style="display: inline;">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-arrow-clockwise me-1"></i>重新匹配
-            </button>
-        </form>
+        <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#startMatchingModal"
+            data-job-id="{{ job.id }}"
+            data-job-name="{{ job.name }}"
+            data-job-company="{{ job.company }}"
+            data-job-city="{{ job.city }}"
+        >
+            <i class="bi bi-arrow-clockwise me-1"></i>重新匹配
+        </button>
+
     </div>
 </section>
+
+{% include 'jobs/start_matching_confirm.html' %}
+
 
 {% if messages %}
 <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
