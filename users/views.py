@@ -89,16 +89,18 @@ def profile_view(request):
         user_form = UserUpdateForm(request.POST, instance=user)
         pwd_form = CustomPasswordChangeForm(user=user, data=request.POST)
 
+        next_url = request.POST.get("next") or "profile"
+
         if "update_profile" in request.POST and user_form.is_valid():
             user_form.save()
             messages.success(request, "资料更新成功")
-            return redirect("profile")
+            return redirect(next_url)
 
         elif "change_password" in request.POST and pwd_form.is_valid():
             pwd_form.save()
             update_session_auth_hash(request, pwd_form.user)
             messages.success(request, "密码修改成功")
-            return redirect("profile")
+            return redirect(next_url)
     else:
         user_form = UserUpdateForm(instance=user)
         pwd_form = CustomPasswordChangeForm(user=user)

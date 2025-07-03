@@ -6,11 +6,12 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.utils import timezone
 
 from .models import JobPosition
 from .forms import JobForm
 from .constants import CITY_CHOICES, EDUCATION_CHOICES, WORK_EXPERIENCE_CHOICES
-from match.models import Matching
+from match.models import Matching, JobMatchTask
 from match.services import async_run_matching_for_job
 
 
@@ -44,7 +45,7 @@ def job_list(request, company):
         job.task_status = task_status
         job.processing = processing
         job.total = total
-        job.percent = int(processing * 100 / total) if total else 0
+        job.percent = round(job.processing / job.total * 100, 2)
 
     return render(request, "jobs/job_list.html", {"jobs": jobs, "company": company})
 
@@ -78,7 +79,7 @@ def get_job_match_status(job_id):
     else:
         status = "失败"
 
-    logging.debug(summary)
+    # logging.debug(summary)
     # return status
     return status, summary["completed"], summary["total"]
 
@@ -93,7 +94,14 @@ def match_status_api(request, company):
 
     for job in jobs:
         task_status, processing, total = get_job_match_status(job["id"])
-        percent = int(processing * 100 / total) if total else 0
+        task = JobMatchTask.objects.get(job_id=job["id"])
+        now = timezone.now()
+        delta_seconds = (now - task.updated_at).total_seconds()
+        progress_fraction = min(delta_seconds / 30, 1)  # 30s 一个匹配
+
+        percent = (
+            round((processing + progress_fraction) * 100 / total, 2) if total else 0
+        )
         data.append(
             {
                 "id": job["id"],

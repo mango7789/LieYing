@@ -16,6 +16,7 @@
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.META.HTTP_REFERER }}">
                 {{ user_form|crispy }}
                 <button type="submit" name="update_profile" class="btn btn-primary">保存资料</button>
             </form>
@@ -28,6 +29,7 @@
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.META.HTTP_REFERER }}">
                 {{ pwd_form|crispy }}
                 <button type="submit" name="change_password" class="btn btn-warning">修改密码</button>
             </form>

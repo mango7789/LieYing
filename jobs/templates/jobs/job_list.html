@@ -61,8 +61,9 @@
                                             color: black;
                                             font-weight: 600;
                                             user-select: none;
+                                            white-space: nowrap;
                                         ">
-                                            {{ job.processing }} / {{ job.total }}
+                                            {{ job.processing }} / {{ job.total }} ({{ job.percent }}%)
                                         </span>
                                     </div>
                                 {% endif %}
@@ -174,11 +175,11 @@
                     } else if (job.status === "匹配中") {
                         html = `
                             <div style="width: 120px; margin: 0 auto; position: relative;">
-                                <span class="badge bg-warning mb-1" style="width: 100%; display: block;">匹配中</span>
+                                <span class="badge bg-warning mb-1 w-100">匹配中</span>
                                 <div class="progress" style="height: 20px; position: relative;">
                                     <div class="progress-bar progress-bar-striped progress-bar-animated bg-info"
                                         role="progressbar"
-                                        style="width: ${job.percent}%;"
+                                        style="width: ${(job.processing / job.total * 100).toFixed(1)}%;"
                                         aria-valuenow="${job.processing}"
                                         aria-valuemin="0"
                                         aria-valuemax="${job.total}">
@@ -191,12 +192,14 @@
                                         color: black;
                                         font-weight: 600;
                                         user-select: none;
+                                        white-space: nowrap;
                                     ">
-                                        ${job.processing} / ${job.total}
+                                        ${job.processing} / ${job.total} (${parseFloat(job.percent).toFixed(2)}%)
                                     </span>
                                 </div>
                             </div>
                         `;
+
 
                     } else if (job.status === "未开始") {
                         html = `<span class="badge bg-secondary fixed-width-badge">未匹配</span>`;
@@ -211,7 +214,7 @@
 
     // 页面加载后立即执行一次，之后每5秒刷新一次
     updateMatchProgress();
-    setInterval(updateMatchProgress, 5000);
+    setInterval(updateMatchProgress, 1000);
 </script>
 
 <style>
@@ -230,6 +233,15 @@
     text-align: center;
     vertical-align: middle;  /* 垂直居中 */
   }
+
+  .progress {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    border-radius: 12px;
+  }
+
 </style>
 
 
