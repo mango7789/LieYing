@@ -30,7 +30,7 @@ def match_list(request):
         "company": "job__company",
         "task_status": "task_status",
         "score": "score",
-        "score_source": "score_source",
+        # "score_source": "score_source",
         "updated_at": "updated_at",
     }
 
@@ -49,7 +49,7 @@ def match_list(request):
         ("job", "岗位名称"),
         ("task_status", "状态"),
         ("score", "分数"),
-        ("score_source", "分数来源"),
+        # ("score_source", "分数来源"),
         ("updated_at", "最后更新时间"),
     ]
 

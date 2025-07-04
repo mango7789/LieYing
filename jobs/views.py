@@ -316,6 +316,8 @@ def match_result(request, job_id):
                     "education_level": resume.education_level,
                     "work_years": resume.work_years,
                     "city": resume.city,
+                    "matching_id": m.id,
+                    "score_source": m.score_source,
                 }
             )
 
@@ -339,3 +341,25 @@ def match_result(request, job_id):
         return render(
             request, "jobs/match_result.html", {"job": job, "page_obj": page_obj}
         )
+
+
+@login_required
+@require_POST
+def update_match_score(request):
+    """更新匹配分数和分数来源"""
+    matching_id = request.POST.get("matching_id")
+    new_score = request.POST.get("score")
+    try:
+        matching = Matching.objects.get(id=matching_id)
+        matching.score = float(new_score)
+        matching.score_source = request.user.username
+        matching.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "score": matching.score,
+                "score_source": matching.score_source,
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})

@@ -91,7 +91,7 @@
                                         {% endif %}
                                         </div>
                                             <div class="col-md-4 d-flex flex-wrap gap-2 justify-content-md-end justify-content-center">
-                                            {% if job.task_status != '匹配中' and job.task_status != '已完成' %}
+                                            <!-- {% if job.task_status != '匹配中' and job.task_status != '已完成' %}
                                             <button
                                                 type="button"
                                                 class="btn btn-sm btn-primary"
@@ -103,7 +103,7 @@
                                                 data-job-city="{{ job.city }}">
                                                 <i class="bi bi-play-fill me-1"></i>开始匹配
                                             </button>
-                                            {% endif %}
+                                            {% endif %} -->
 
                                             <a href="{% url 'jobs:match_result' job.id %}" class="btn btn-sm btn-outline-success">
                                                 <i class="bi bi-eye me-1"></i>结果

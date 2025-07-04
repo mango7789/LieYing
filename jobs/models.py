@@ -17,6 +17,15 @@ class JobPosition(models.Model):
     created_at = models.DateTimeField("创建时间", auto_now_add=True)
     updated_at = models.DateTimeField("更新时间", auto_now=True)
 
+    owner = models.ForeignKey(
+        User,
+        verbose_name="负责人",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="job_positions",
+    )
+
     class Meta:
         verbose_name = "岗位"
         verbose_name_plural = "岗位"
