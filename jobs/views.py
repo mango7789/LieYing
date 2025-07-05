@@ -4,15 +4,16 @@ from django.db.models import Count, Max, Q
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils import timezone
 
-from .models import JobPosition
+from .models import JobPosition, UserScore
 from .forms import JobForm
 from .constants import CITY_CHOICES, EDUCATION_CHOICES, WORK_EXPERIENCE_CHOICES
 from match.models import Matching, JobMatchTask
 from match.services import async_run_matching_for_job
+from resumes.models import Resume
 
 
 ###########################################################
@@ -152,7 +153,9 @@ def job_create_general(request):
         print("表单是否有效:", form.is_valid())  # 调试信息
         if form.is_valid():
             try:
-                job = form.save()
+                job = form.save(commit=False)
+                job.owner = request.user
+                job.save()
                 print("保存成功，职位ID:", job.id)  # 调试信息
                 messages.success(request, "职位添加成功！")
                 return redirect("jobs:company_list")
@@ -190,6 +193,7 @@ def job_create(request, company):
             try:
                 job = form.save(commit=False)
                 job.company = company  # 强制使用URL中的公司名
+                job.owner = request.user
                 job.save()
                 messages.success(request, "职位添加成功！")
                 return redirect("jobs:job_list", company=company)
@@ -224,7 +228,9 @@ def job_update(request, pk):
         form = JobForm(request.POST, instance=job)
         if form.is_valid():
             try:
-                form.save()
+                job = form.save(commit=False)
+                job.owner = request.user
+                job.save()
                 messages.success(request, "职位信息更新成功！")
                 return redirect("jobs:job_list", company=job.company)
             except Exception as e:
@@ -291,22 +297,47 @@ def match_result(request, job_id):
     job = get_object_or_404(JobPosition, pk=job_id)
 
     try:
-        matchings = (
-            Matching.objects.select_related("resume")
-            .filter(job=job, task_status="已完成")
-            .order_by("-score")
+        matchings = Matching.objects.select_related("resume").filter(
+            job=job, task_status="已完成"
         )
 
         resumes_data = []
 
         for m in matchings:
             resume = m.resume
+            # 获取最新用户评分
+            latest_user_score = (
+                UserScore.objects.filter(job=m.job, resume=resume)
+                .select_related("user")
+                .order_by("-created_at")
+                .first()
+            )
+
+            # 分数显示逻辑：优先用户评分，没有时显示机器评分
+            if latest_user_score:
+                display_score = latest_user_score.user_match_score
+                score_source = latest_user_score.user.username
+                score_source_type = "user"
+            else:
+                display_score = m.score
+                score_source = "系统"
+                score_source_type = "system"
+
             resumes_data.append(
                 {
                     "resume_id": resume.resume_id,
                     "name": resume.name,
-                    "match_score": round(m.score or 0, 1),
-                    "match_score_percent": round((m.score or 0) * 10, 1),
+                    "match_score": round(display_score, 1) if display_score else None,
+                    "match_score_percent": (
+                        round((display_score or 0) * 10, 1) if display_score else 0
+                    ),
+                    "score_source": score_source,
+                    "score_source_type": score_source_type,
+                    "machine_score": m.score,  # 机器评分，用于历史记录
+                    "user_score_count": UserScore.objects.filter(
+                        job=m.job, resume=resume
+                    ).count(),
+                    "matching_id": m.id,
                     "status": resume.status,
                     "match_status": m.status,
                     "current_company": resume.company_name,
@@ -316,10 +347,11 @@ def match_result(request, job_id):
                     "education_level": resume.education_level,
                     "work_years": resume.work_years,
                     "city": resume.city,
-                    "matching_id": m.id,
-                    "score_source": m.score_source,
                 }
             )
+
+        # 按最新显示分数排序（降序）
+        resumes_data.sort(key=lambda x: x["match_score"] or 0, reverse=True)
 
         # 分页逻辑
         paginator = Paginator(resumes_data, 8)
@@ -361,5 +393,83 @@ def update_match_score(request):
                 "score_source": matching.score_source,
             }
         )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
+
+
+@login_required
+@require_GET
+def get_user_score_history(request):
+    """获取某岗位-简历的所有评分记录（包含机器评分和用户评分）"""
+    job_id = request.GET.get("job_id")
+    resume_id = request.GET.get("resume_id")
+
+    # 获取机器评分
+    try:
+        machine_matching = Matching.objects.get(job_id=job_id, resume_id=resume_id)
+        machine_score = machine_matching.score
+        machine_scored_at = machine_matching.scored_at
+    except Matching.DoesNotExist:
+        machine_score = None
+        machine_scored_at = None
+
+    # 获取用户评分历史
+    user_scores = (
+        UserScore.objects.filter(job_id=job_id, resume_id=resume_id)
+        .select_related("user")
+        .order_by("-created_at")
+    )
+
+    history = []
+
+    # 添加机器评分（如果存在）
+    if machine_score is not None:
+        history.append(
+            {
+                "user": "系统",
+                "score": machine_score,
+                "created_at": (
+                    machine_scored_at.strftime("%Y-%m-%d %H:%M:%S")
+                    if machine_scored_at
+                    else "未知时间"
+                ),
+                "type": "system",
+            }
+        )
+
+    # 添加用户评分
+    for s in user_scores:
+        history.append(
+            {
+                "user": s.user.username,
+                "score": s.user_match_score,
+                "created_at": s.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "type": "user",
+            }
+        )
+
+    # 按时间倒序排列（最新的在前）
+    history.sort(key=lambda x: x["created_at"], reverse=True)
+
+    return JsonResponse({"history": history})
+
+
+@login_required
+@require_POST
+def add_user_score(request):
+    """为岗位-简历插入新评分"""
+    job_id = request.POST.get("job_id")
+    resume_id = request.POST.get("resume_id")
+    score = request.POST.get("score")
+    try:
+        job = JobPosition.objects.get(id=job_id)
+        resume = Resume.objects.get(resume_id=resume_id)
+        UserScore.objects.create(
+            user=request.user,
+            job=job,
+            resume=resume,
+            user_match_score=float(score),
+        )
+        return JsonResponse({"success": True})
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})

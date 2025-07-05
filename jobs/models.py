@@ -79,3 +79,23 @@ class JobOwner(models.Model):
             raise ValidationError(
                 f"用户 {self.user.username} 不是猎头，不能担任岗位负责人。"
             )
+
+
+class UserScore(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="评分用户")
+    job = models.ForeignKey(JobPosition, on_delete=models.CASCADE, verbose_name="岗位")
+    resume = models.ForeignKey(
+        "resumes.Resume", on_delete=models.CASCADE, verbose_name="简历"
+    )
+    user_match_score = models.FloatField("用户评分")
+    created_at = models.DateTimeField("评分时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "用户评分"
+        verbose_name_plural = "用户评分"
+        indexes = [
+            models.Index(fields=["user", "job", "resume", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} 对 {self.job} - {self.resume} 评分 {self.user_match_score}"

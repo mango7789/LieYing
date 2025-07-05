@@ -17,6 +17,8 @@ urlpatterns = [
     path("match/start/<int:job_id>/", views.start_matching, name="start_matching"),
     path("match/result/<int:job_id>/", views.match_result, name="match_result"),
     path("match/update_score/", views.update_match_score, name="update_match_score"),
+    path("score/history/", views.get_user_score_history, name="get_user_score_history"),
+    path("score/add/", views.add_user_score, name="add_user_score"),
     path(
         "<str:company>/match_status_api/",
         views.match_status_api,
