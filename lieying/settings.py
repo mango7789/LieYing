@@ -167,6 +167,9 @@ LOGGING = {
     },
 }
 
+LOG_DIR = Path(BASE_DIR) / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
 # Media
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")

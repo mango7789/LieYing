@@ -1,2 +1,3 @@
 #!/bin/bash
-docker exec -i lieying mysqldump -u root -p --default-character-set=utf8 --databases lieying > lieying.sql
+docker exec -e MYSQL_PWD=lieying lieying \
+  mysqldump -u root --default-character-set=utf8mb4 --databases lieying > lieying.sql
