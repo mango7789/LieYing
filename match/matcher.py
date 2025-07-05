@@ -1,12 +1,15 @@
 import re
 import json
-import torch
 import logging
 import subprocess
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from typing import Dict, Any, Optional
-
 from django.conf import settings
+
+try:
+    import torch  # type: ignore
+    from transformers import AutoTokenizer, AutoModelForCausalLM  # type: ignore
+except ImportError:
+    pass
 
 
 class ResumeJobMatcher:

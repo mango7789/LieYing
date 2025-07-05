@@ -22,6 +22,7 @@
 - 导入测试数据
   ```bash
   mysql -u <user> -p; # 登录 MySQL 服务器
+  SET NAMES utf8mb4;
   source lieying.sql; # 导入数据
   ```
 
