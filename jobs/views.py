@@ -1,3 +1,4 @@
+import ast
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count, Max, Q
@@ -136,6 +137,37 @@ def match_status_api(request, company):
         )
 
     return JsonResponse({"jobs": data})
+
+
+def safe_parse_list_str(s):
+    if not s:
+        return []
+    if isinstance(s, list):
+        return s
+    try:
+        return ast.literal_eval(s)
+    except Exception:
+        return []
+
+
+@login_required
+def get_matching_report(request, matching_id):
+    # matching_id = request.GET.get("matching_id")
+    try:
+        matching = Matching.objects.get(id=matching_id)
+        strengths = safe_parse_list_str(matching.strengths)
+        weaknesses = safe_parse_list_str(matching.weaknesses)
+        suggestions = safe_parse_list_str(matching.suggestions)
+        return JsonResponse(
+            {
+                "reason": matching.reason,
+                "strengths": strengths,
+                "weaknesses": weaknesses,
+                "suggestions": suggestions,
+            }
+        )
+    except Matching.DoesNotExist:
+        return JsonResponse({"error": "匹配记录不存在"}, status=404)
 
 
 ###########################################################
@@ -347,6 +379,8 @@ def match_result(request, job_id):
                     "education_level": resume.education_level,
                     "work_years": resume.work_years,
                     "city": resume.city,
+                    "project_experience": getattr(resume, "project_experiences", []),
+                    "work_experience": getattr(resume, "working_experiences", []),
                 }
             )
 
@@ -368,7 +402,7 @@ def match_result(request, job_id):
         page_obj = []
 
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
-        return render(request, "jobs/match_result_table.html", {"page_obj": page_obj})
+        return render(request, "jobs/match_result_table.html", {"page_obj": page_obj, "job": job})
     else:
         return render(
             request, "jobs/match_result.html", {"job": job, "page_obj": page_obj}

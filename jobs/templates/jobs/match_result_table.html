@@ -59,136 +59,43 @@
                     {% endif %}
                 </td>
                 <td>
-                    <div class="d-flex align-items-center justify-content-center h-100">
+                    <div class="d-flex align-items-center justify-content-center h-100 gap-2">
                         <a href="https://h.liepin.com/resume/showresumedetail/?showsearchfeedback=1&res_id_encode={{ resume.resume_id }}"
-                            class="btn btn-outline-primary btn-sm me-1" title="查看简历" style="font-size: 0.75rem;">
+                            class="btn btn-outline-primary btn-sm rounded" title="查看简历"
+                            style="font-size: 0.75rem; min-width: 80px;">
                             <i class="bi bi-eye me-1"></i>查看简历
                         </a>
-                        <a href="#" class="btn btn-outline-success btn-sm mx-1" title="联系候选人"
-                            style="font-size: 0.75rem;">
-                            <i class="bi bi-telephone me-1"></i>联系候选人
-                        </a>
-                        <button class="btn btn-outline-warning btn-sm ms-1 btn-edit-score"
+                        <button class="btn btn-outline-warning btn-sm rounded btn-edit-score"
                             data-matching-id="{{ resume.matching_id }}" data-current-score="{{ resume.match_score }}"
                             data-job-id="{{ job.id }}" data-resume-id="{{ resume.resume_id }}" title="编辑分数"
-                            style="font-size: 0.75rem;">
+                            style="font-size: 0.75rem; min-width: 80px;">
                             <i class="bi bi-pencil me-1"></i>编辑分数
+                        </button>
+                        <button class="btn btn-outline-info btn-sm rounded btn-view-report"
+                            data-matching-id="{{ resume.matching_id }}" data-name="{{ resume.name }}"
+                            data-gender="{{ resume.gender }}" data-age="{{ resume.age }}"
+                            data-education="{{ resume.education_level }}" data-work-years="{{ resume.work_years }}"
+                            data-city="{{ resume.city }}"
+                            data-project-experience="{{ resume.project_experience|default_if_none:'[]'|escapejs }}"
+                            data-work-experience="{{ resume.work_experience|default_if_none:'[]'|escapejs }}"
+                            data-current-score="{{ resume.match_score }}" style="font-size: 0.75rem; min-width: 80px;">
+                            推荐报告
                         </button>
                     </div>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
-
     </table>
 </div>
 
 {% include "components/Pager.html" %}
 
-<!-- 编辑分数弹窗 -->
-<div class="modal fade" id="editScoreModal" tabindex="-1" aria-labelledby="editScoreModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editScoreModalLabel">编辑分数</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="edit-matching-id">
-                <div class="mb-3">
-                    <label for="edit-score-input" class="form-label">新分数</label>
-                    <input type="number" step="0.1" min="0" max="10" class="form-control" id="edit-score-input">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-dark" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" id="save-score-btn">保存</button>
-            </div>
-        </div>
-    </div>
-</div>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var editModal = new bootstrap.Modal(document.getElementById('editScoreModal'));
-        document.querySelectorAll('.btn-edit-score').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                document.getElementById('edit-matching-id').value = btn.getAttribute('data-matching-id');
-                document.getElementById('edit-score-input').value = btn.getAttribute('data-current-score');
-                editModal.show();
-            });
-        });
-        document.getElementById('save-score-btn').addEventListener('click', function () {
-            var matchingId = document.getElementById('edit-matching-id').value;
-            var newScore = document.getElementById('edit-score-input').value;
-            var row = document.querySelector('.btn-edit-score[data-matching-id="' + matchingId + '"]').closest('tr');
-            var jobId = '{{ job.id }}';
-            var resumeId = row.querySelector('.score-clickable').getAttribute('data-resume-id');
-            fetch('{% url "jobs:add_user_score" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: `job_id=${jobId}&resume_id=${resumeId}&score=${newScore}`
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('分数更新失败：' + data.error);
-                    }
-                });
-        });
-        var historyModal = new bootstrap.Modal(document.getElementById('scoreHistoryModal'));
-        document.querySelectorAll('.score-clickable').forEach(function (span) {
-            span.addEventListener('click', function () {
-                var jobId = span.getAttribute('data-job-id');
-                var resumeId = span.getAttribute('data-resume-id');
-                fetch('{% url "jobs:get_user_score_history" %}?job_id=' + jobId + '&resume_id=' + resumeId)
-                    .then(response => response.json())
-                    .then(data => {
-                        var list = document.getElementById('score-history-list');
-                        list.innerHTML = '';
-                        if (data.history.length === 0) {
-                            list.innerHTML = '<li class="list-group-item">暂无评分记录</li>';
-                        } else {
-                            data.history.forEach(function (item) {
-                                var li = document.createElement('li');
-                                li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                                var badgeClass = item.type === 'system' ? 'bg-secondary' : 'bg-primary';
-                                li.innerHTML = `
-                  <div>
-                    <strong>${item.user}</strong>：${item.score}分
-                    <small class="text-muted">（${item.created_at}）</small>
-                  </div>
-                  <span class="badge ${badgeClass}">${item.type === 'system' ? '系统' : '用户'}</span>
-                `;
-                                list.appendChild(li);
-                            });
-                        }
-                        historyModal.show();
-                    });
-            });
-        });
-    });
-</script>
 
-<!-- 评分历史弹窗 -->
-<div class="modal fade" id="scoreHistoryModal" tabindex="-1" aria-labelledby="scoreHistoryModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="scoreHistoryModalLabel">评分历史</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <ul class="list-group" id="score-history-list"></ul>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
-            </div>
-        </div>
-    </div>
+<div id="error-alert"
+    class="alert alert-danger alert-dismissible fade d-none fixed-top mx-auto shadow rounded-4 border-0" role="alert"
+    style="z-index: 2000; max-width: 400px; left: 0; right: 0; top: 32px; font-size: 1.1rem; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.10);">
+    <strong class="fw-bold">错误：</strong> <span id="error-message"></span>
+    <button type="button" class="btn-close" aria-label="Close"
+        onclick="document.getElementById('error-alert').classList.add('d-none')"></button>
 </div>

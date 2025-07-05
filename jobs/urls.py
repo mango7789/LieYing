@@ -24,4 +24,9 @@ urlpatterns = [
         views.match_status_api,
         name="match_status_api",
     ),
+    path(
+        "get_matching_report/<int:matching_id>",
+        views.get_matching_report,
+        name="get_matching_report",
+    ),
 ]

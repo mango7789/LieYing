@@ -1,0 +1,105 @@
+<!-- 编辑分数弹窗 -->
+<div class="modal fade" id="editScoreModal" tabindex="-1" aria-labelledby="editScoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editScoreModalLabel">编辑分数</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-matching-id">
+                <input type="hidden" id="edit-job-id">
+                <input type="hidden" id="edit-resume-id">
+                <!-- 评分历史板块 -->
+                <div class="mb-4">
+                    <h6>评分历史</h6>
+                    <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                        <ul class="list-group list-group-flush" id="score-history-list">
+                            <li class="list-group-item text-muted">加载中...</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 新增分数 -->
+                <div class="mb-3">
+                    <label for="edit-score-input" class="form-label">新增分数</label>
+                    <input type="number" step="0.1" min="0" max="10" class="form-control" id="edit-score-input"
+                        placeholder="请输入0-10之间的分数">
+                    <div class="form-text">请输入0-10之间的分数，支持一位小数</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-dark" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="save-score-btn">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 评分历史弹窗 -->
+<div class="modal fade" id="scoreHistoryModal" tabindex="-1" aria-labelledby="scoreHistoryModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scoreHistoryModalLabel">评分历史</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="list-group" id="score-history-list"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 推荐报告弹窗 -->
+<div class="modal fade" id="recommendationReportModal" tabindex="-1" aria-labelledby="recommendationReportModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <h4 class="modal-title fw-bold text-primary mb-0" id="recommendationReportModalLabel"
+                        style="line-height:1;">推荐报告</h4>
+                    <span id="report-score-badge" class="badge bg-success ms-3"
+                        style="font-size:1rem; vertical-align:middle; line-height:1.8;"></span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+            </div>
+            <div class="modal-body" style="max-height: 76vh; overflow-y: auto;">
+                <!-- 候选人信息 -->
+                <div id="report-candidate-info" class="mb-3">
+                    <span class="fw-bold">姓名：</span><span id="report-candidate-name"></span>
+                    <span class="mx-3 fw-bold">性别：</span><span id="report-candidate-gender"></span>
+                    <span class="mx-3 fw-bold">年龄：</span><span id="report-candidate-age"></span>
+                    <span class="mx-3 fw-bold">学历：</span><span id="report-candidate-education"></span>
+                    <span class="mx-3 fw-bold">工作年限：</span><span id="report-candidate-workyears"></span>
+                    <span class="mx-3 fw-bold">城市：</span><span id="report-candidate-city"></span>
+                </div>
+                <!-- 工作经历 -->
+                <div id="report-work-experience" class="mb-3"></div>
+                <!-- 项目经历 -->
+                <div id="report-project-experience" class="mb-3"></div>
+                <!-- 原有内容 -->
+                <h5 class="fw-bold text-primary mb-2">匹配原因</h5>
+                <p id="report-reason" class="text-muted fs-6"></p>
+
+                <h5 class="fw-bold text-primary mt-4 mb-2">简历长处</h5>
+                <ol id="report-strengths" class="text-muted ps-4" style="line-height: 1.5; font-size: 0.95rem;"></ol>
+
+                <h5 class="fw-bold text-primary mt-4 mb-2">简历短处</h5>
+                <ol id="report-weaknesses" class="text-muted ps-4" style="line-height: 1.5; font-size: 0.95rem;"></ol>
+
+                <h5 class="fw-bold text-primary mt-4 mb-2">改进建议</h5>
+                <ol id="report-suggestions" class="text-muted ps-4" style="line-height: 1.5; font-size: 0.95rem;"></ol>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>

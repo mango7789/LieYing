@@ -1,4 +1,5 @@
 {% extends "Layout.html" %}
+{% load custom_tags %}
 
 {% block content %}
 <section class="features">
@@ -45,6 +46,16 @@
         <div class="card-body" id="match-result-body">
             {% include "jobs/match_result_table.html" %}
         </div>
+        {% include "jobs/match_modals.html" %}
+        <div id="error-alert"
+            class="alert alert-danger alert-dismissible fade d-none fixed-top mx-auto shadow rounded-4 border-0"
+            role="alert"
+            style="z-index: 1050; max-width: 400px; left: 0; right: 0; top: 32px; font-size: 1.1rem; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.10);">
+            <strong class="fw-bold">错误：</strong>
+            <span id="error-message"></span>
+            <button type="button" class="btn-close" aria-label="Close"
+                onclick="document.getElementById('error-alert').classList.add('d-none')"></button>
+        </div>
     </div>
     {% else %}
     <div class="alert alert-info text-center">
@@ -53,20 +64,11 @@
     </div>
     {% endif %}
 
-    <!-- {% include "components/Pager.html" %} -->
-
     <!-- 重新匹配按钮 -->
     <div class="text-center mt-4">
-        <button
-            type="button"
-            class="btn btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#startMatchingModal"
-            data-job-id="{{ job.id }}"
-            data-job-name="{{ job.name }}"
-            data-job-company="{{ job.company }}"
-            data-job-city="{{ job.city }}"
-        >
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#startMatchingModal"
+            data-job-id="{{ job.id }}" data-job-name="{{ job.name }}" data-job-company="{{ job.company }}"
+            data-job-city="{{ job.city }}">
             <i class="bi bi-arrow-clockwise me-1"></i>重新匹配
         </button>
 
@@ -89,35 +91,308 @@
 
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const container = document.getElementById("match-result-body");
+    document.addEventListener("DOMContentLoaded", function () {
+        const container = document.getElementById("match-result-body");
 
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".page-ajax")) {
-      e.preventDefault();
-      const url = e.target.closest("a").getAttribute("href");
+        // 初始化所有事件绑定
+        initPagination();         // 分页按钮
+        bindResumeEventHandlers(); // 首次加载时的编辑/推荐按钮
+    });
 
-      fetch(url, {
-        headers: {
-          "X-Requested-With": "XMLHttpRequest"
-        }
-      })
-      .then(response => {
-        if (!response.ok) throw new Error("请求失败");
-        return response.text();
-      })
-      .then(html => {
-        container.innerHTML = html;
-      })
-      .catch(error => {
-        alert("分页加载失败");
-        console.error(error);
-      });
+    // 分页加载函数（绑定 .page-ajax 链接点击）
+    function initPagination() {
+        document.addEventListener("click", function (e) {
+            const link = e.target.closest(".page-ajax");
+            if (!link) return;
+
+            e.preventDefault();
+            const url = link.getAttribute("href");
+
+            fetch(url, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error("请求失败");
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById("match-result-body").innerHTML = html;
+                    bindResumeEventHandlers(); // 分页内容更新后重新绑定
+                })
+                .catch(error => {
+                    showError("分页加载失败");
+                    console.error(error);
+                });
+        });
     }
-  });
-});
+
+    // 核心：绑定简历卡片里的交互事件（推荐报告、编辑分数）
+    function bindResumeEventHandlers() {
+        const matchBody = document.getElementById('match-result-body');
+        const editModal = new bootstrap.Modal(document.getElementById('editScoreModal'));
+        const historyModal = new bootstrap.Modal(document.getElementById('scoreHistoryModal'));
+        const reportModal = new bootstrap.Modal(document.getElementById('recommendationReportModal'));
+
+        // 编辑分数按钮
+        matchBody.querySelectorAll('.btn-edit-score').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const matchingId = btn.dataset.matchingId;
+                const currentScore = btn.dataset.currentScore;
+                const jobId = btn.dataset.jobId;
+                const resumeId = btn.dataset.resumeId;
+
+                document.getElementById('edit-matching-id').value = matchingId;
+                document.getElementById('edit-job-id').value = jobId;
+                document.getElementById('edit-resume-id').value = resumeId;
+                document.getElementById('edit-score-input').value = currentScore;
+                loadScoreHistory(jobId, resumeId);
+                editModal.show();
+            });
+        });
+
+        // 推荐报告按钮绑定
+        matchBody.querySelectorAll('.btn-view-report').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const matchingId = btn.dataset.matchingId;
+                const url = "{% url 'jobs:get_matching_report' 0 %}".replace('0', matchingId);
+
+                // 新增：填充候选人信息
+                document.getElementById('report-candidate-name').innerText = btn.dataset.name || '';
+                document.getElementById('report-candidate-gender').innerText = btn.dataset.gender || '';
+                document.getElementById('report-candidate-age').innerText = btn.dataset.age || '';
+                document.getElementById('report-candidate-education').innerText = btn.dataset.education || '';
+                document.getElementById('report-candidate-workyears').innerText = btn.dataset.workYears || '';
+                document.getElementById('report-candidate-city').innerText = btn.dataset.city || '';
+
+                document.getElementById('report-score-badge').innerText = btn.dataset.currentScore
+                    ? `最新打分：${btn.dataset.currentScore}分`
+                    : '';
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('report-reason').innerText = data.reason || '无';
+                        fillList('report-strengths', data.strengths);
+                        fillList('report-weaknesses', data.weaknesses);
+                        fillList('report-suggestions', data.suggestions);
+
+                        // 新增：结构化渲染项目经历
+                        let projectExp = btn.dataset.projectExperience;
+                        try {
+                            // 兼容后端输出的 \u0027 和单引号
+                            projectExp = projectExp.replace(/\\u0027/g, '"').replace(/'/g, '"');
+                            const projects = JSON.parse(projectExp);
+                            let projectHtml = '';
+                            if (Array.isArray(projects) && projects.length > 0) {
+                                projectHtml = '<div class="mb-2"><h5 class="fw-bold text-primary mb-2">项目经历</h5></div>';
+                                projects.forEach((p, idx) => {
+                                    projectHtml += `
+                                        <div class="border rounded p-2 mb-2">
+                                            <div><span class="fw-bold">项目名称：</span>${p.project_name || ''}</div>
+                                            <div><span class="fw-bold">时间：</span>${p.employment_period || ''}</div>
+                                            <div><span class="fw-bold">角色：</span>${p.project_role || p['项目职务'] || ''}</div>
+                                            <div><span class="fw-bold">公司：</span>${p.company || ''}</div>
+                                            <div><span class="fw-bold">描述：</span>${p.project_description || p['项目描述'] || p.responsibilities || p['项目职责'] || ''}</div>
+                                        </div>
+                                    `;
+                                });
+                            }
+                            document.getElementById('report-project-experience').innerHTML = projectHtml;
+                        } catch (e) {
+                            document.getElementById('report-project-experience').innerHTML = '<div class="text-danger">项目经历解析失败</div>';
+                        }
+
+                        // 结构化渲染工作经历
+                        let workExp = btn.dataset.workExperience;
+                        let workHtml = '';
+                        try {
+                            // 兼容后端输出的 \u0027 和单引号
+                            workExp = workExp.replace(/\\u0027/g, '"').replace(/'/g, '"');
+                            const works = JSON.parse(workExp);
+                            if (Array.isArray(works) && works.length > 0) {
+                                workHtml = '<div class="mb-2"><h5 class="fw-bold text-primary mb-2">工作经历</h5></div>';
+                                works.forEach((w, idx) => {
+                                    workHtml += `
+                                        <div class="border rounded p-2 mb-2">
+                                            <div><span class="fw-bold">公司：</span>${w.company || ''}</div>
+                                            <div><span class="fw-bold">时间：</span>${w.employment_period || ''}</div>
+                                            <div><span class="fw-bold">岗位：</span>${w.job_name || ''}</div>
+                                            <div><span class="fw-bold">部门：</span>${w.department || ''}</div>
+                                            <div><span class="fw-bold">职责：</span>${w.responsibilities || ''}</div>
+                                        </div>
+                                    `;
+                                });
+                            }
+                        } catch (e) {
+                            workHtml = '<div class="text-danger">工作经历解析失败</div>';
+                        }
+                        document.getElementById('report-work-experience').innerHTML = workHtml;
+
+                        reportModal.show();
+                    })
+                    .catch(() => {
+                        document.getElementById('error-message').innerText = "获取推荐报告失败，请稍后重试";
+                        const alertBox = document.getElementById('error-alert');
+                        alertBox.classList.remove('d-none');
+                        alertBox.classList.add('show');
+                    });
+            });
+        });
+
+        // 评分历史点击事件
+        document.querySelectorAll('.score-clickable').forEach(span => {
+            span.addEventListener('click', function () {
+                console.log(span.dataset);
+                const jobId = span.dataset.jobId;
+                const resumeId = span.dataset.resumeId;
+
+                fetch('{% url "jobs:get_user_score_history" %}?job_id=' + jobId + '&resume_id=' + resumeId)
+                    .then(response => response.json())
+                    .then(data => {
+                        const list = document.getElementById('score-history-list');
+                        list.innerHTML = '';
+                        if (data.history.length === 0) {
+                            list.innerHTML = '<li class="list-group-item">暂无评分记录</li>';
+                        } else {
+                            data.history.forEach(item => {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                                const badgeClass = item.type === 'system' ? 'bg-secondary' : 'bg-primary';
+                                li.innerHTML = `
+                                <div>
+                                    <strong>${item.user}</strong>：${item.score}分
+                                    <small class="text-muted">（${item.created_at}）</small>
+                                </div>
+                                <span class="badge ${badgeClass}">${item.type === 'system' ? '系统' : '用户'}</span>
+                            `;
+                                list.appendChild(li);
+                            });
+                        }
+                        historyModal.show();
+                    });
+            });
+        });
+
+        // 保存分数按钮（只绑定一次，放在forEach外面）
+        document.getElementById('save-score-btn').onclick = function () {
+            const btnSave = this;
+            btnSave.disabled = true; // 禁用按钮，防止重复点击
+
+            const matchingId = document.getElementById('edit-matching-id').value;
+            const newScore = document.getElementById('edit-score-input').value;
+            const btn = document.querySelector('.btn-edit-score[data-matching-id="' + matchingId + '"]');
+            const jobId = btn.dataset.jobId;
+            const resumeId = btn.dataset.resumeId;
+
+            // 新增：如果分数未变化，禁止保存
+            const oldScore = btn.dataset.currentScore;
+            if (String(newScore) === String(oldScore)) {
+                showError('分数未变化，无需保存。');
+                btnSave.disabled = false;
+                return;
+            }
+
+            fetch('{% url "jobs:add_user_score" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `job_id=${jobId}&resume_id=${resumeId}&score=${newScore}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        showError('分数更新失败：' + data.error);
+                        btnSave.disabled = false; // 失败时恢复按钮
+                    }
+                })
+                .catch(() => {
+                    showError('网络错误，请重试');
+                    btnSave.disabled = false; // 网络异常时恢复按钮
+                });
+        };
+    }
+    // 加载评分历史（用于编辑弹窗中）
+    function loadScoreHistory(jobId, resumeId) {
+        const list = document.getElementById('score-history-list');
+        list.innerHTML = '<li class="list-group-item text-muted">加载中...</li>';
+
+        fetch('{% url "jobs:get_user_score_history" %}?job_id=' + jobId + '&resume_id=' + resumeId)
+            .then(response => response.json())
+            .then(data => {
+                list.innerHTML = '';
+                if (data.history.length === 0) {
+                    list.innerHTML = '<li class="list-group-item text-muted">暂无评分记录</li>';
+                } else {
+                    data.history.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        const badgeClass = item.type === 'system' ? 'bg-secondary' : 'bg-primary';
+                        li.innerHTML = `
+                <div>
+                    <strong>${item.user}</strong>：${item.score}分
+                    <small class="text-muted">（${item.created_at}）</small>
+                </div>
+                <span class="badge ${badgeClass}">${item.type === 'system' ? '系统' : '用户'}</span>
+            `;
+                        list.appendChild(li);
+                    });
+                }
+            })
+            .catch(() => {
+                list.innerHTML = '<li class="list-group-item text-danger">加载失败</li>';
+            });
+    }
+
+    // 推荐报告渲染工具
+    function fillList(elementId, items) {
+        const ol = document.getElementById(elementId);
+        ol.innerHTML = '';
+
+        if (!items) {
+            ol.innerHTML = '<li>无</li>';
+            return;
+        }
+
+        if (typeof items === 'string') {
+            try {
+                items = JSON.parse(items);
+            } catch (e) {
+                ol.innerHTML = `<li>${items}</li>`;
+                return;
+            }
+        }
+
+        if (!Array.isArray(items) || items.length === 0) {
+            ol.innerHTML = '<li>无</li>';
+            return;
+        }
+
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            ol.appendChild(li);
+        });
+    }
+
+    function showError(message) {
+        const alertBox = document.getElementById('error-alert');
+        document.getElementById('error-message').innerText = message;
+        alertBox.classList.remove('d-none');
+        alertBox.classList.add('show');
+        // 自动3秒后关闭（可选）
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+            alertBox.classList.add('d-none');
+        }, 2000);
+    }
+
 </script>
 
 
 {% endblock %}
-
