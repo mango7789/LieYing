@@ -118,6 +118,13 @@ class Parser:
 
             data_dict["expected_positions"] = expected_positions
 
+            # 教育经历（结构化数据）
+            education_list = []
+            edu_elems = soup.select(".edu-school-cont")
+            for elem in edu_elems:
+                education_list.append(elem.text.replace("\n", " ").strip())
+            data_dict["education"] = education_list
+
             # 提取资格证书
             certificates = []
             cert_elems = soup.select(".credential-tag")
@@ -187,7 +194,14 @@ class Parser:
                         if title_elem and content_elem:
                             title = title_elem.text.strip("：")
                             content = content_elem.text.strip().replace("\n", " ")
-                            work_data[title] = content
+                            if title == "薪   资":
+                                work_data["salary"] = content
+                            elif title == "职位类别":
+                                work_data["position_category"] = content
+                            elif title == "职责业绩":
+                                work_data["responsibilities"] = content
+                            elif title == "所在部门":
+                                work_data["department"] = content
 
                 work_experience.append(work_data)
             data_dict["working_experiences"] = work_experience
@@ -222,7 +236,16 @@ class Parser:
                         if title_elem and content_elem:
                             title = title_elem.text.strip("：")
                             content = content_elem.text.strip().replace("\n", " ")
-                            project_data[title] = content
+                        if title == "项目职务":
+                            project_data["project_role"] = content
+                        elif title == "所在公司":
+                            project_data["company"] = content
+                        elif title == "项目描述":
+                            project_data["project_description"] = content
+                        elif title == "项目职责":
+                            project_data["responsibilities"] = content
+                        elif title == "项目业绩":
+                            project_data["project_achievement"] = content
 
                 project_experience.append(project_data)
             data_dict["project_experiences"] = project_experience

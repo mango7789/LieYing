@@ -186,15 +186,40 @@
                             const projects = JSON.parse(projectExp);
                             let projectHtml = '';
                             if (Array.isArray(projects) && projects.length > 0) {
-                                projectHtml = '<div class="mb-2"><h5 class="fw-bold text-primary mb-2">项目经历</h5></div>';
+                                projectHtml = '<div class="mb-2"><div class="section-title">项目经历</div></div>';
                                 projects.forEach((p, idx) => {
+                                    // projectHtml += `
+                                    //     <div class="border rounded p-2 mb-2">
+                                    //         <div><span class="fw-bold">项目名称：</span>${p.project_name || ''}</div>
+                                    //         <div><span class="fw-bold">时间：</span>${p.employment_period || ''}</div>
+                                    //         <div><span class="fw-bold">角色：</span>${p.project_role || p['项目职务'] || ''}</div>
+                                    //         <div><span class="fw-bold">公司：</span>${p.company || ''}</div>
+                                    //         <div><span class="fw-bold">描述：</span>${p.project_description || p['项目描述'] || p.responsibilities || p['项目职责'] || ''}</div>
+                                    //     </div>
+                                    // `;
+
                                     projectHtml += `
-                                        <div class="border rounded p-2 mb-2">
-                                            <div><span class="fw-bold">项目名称：</span>${p.project_name || ''}</div>
-                                            <div><span class="fw-bold">时间：</span>${p.employment_period || ''}</div>
-                                            <div><span class="fw-bold">角色：</span>${p.project_role || p['项目职务'] || ''}</div>
-                                            <div><span class="fw-bold">公司：</span>${p.company || ''}</div>
-                                            <div><span class="fw-bold">描述：</span>${p.project_description || p['项目描述'] || p.responsibilities || p['项目职责'] || ''}</div>
+                                        <div class="job-container">
+                                            <div class="job-details">
+                                                <div class="job-header-line">
+                                                    <div><span class="job-date">时间：</span>${p.employment_period || ''}</div>
+                                                    <div><span class="company-name">项目名称：</span>${p.project_name || ''}</div>
+                                                </div>
+                                                <table class="job-details-table">
+                                                    <tr>
+                                                        <th>角色</th>
+                                                        <td>${p.project_role || p['项目职务'] || ''}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>公司</th>
+                                                        <td>${p.company || p['所在公司'] || ''}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>描述</th>
+                                                        <td>${p.project_description || p['项目描述'] || p.responsibilities || p['项目职责'] || ''}</td>
+                                                    </tr>
+                                                </table>    
+                                            </div>    
                                         </div>
                                     `;
                                 });
@@ -211,17 +236,45 @@
                             // 兼容后端输出的 \u0027 和单引号
                             workExp = workExp.replace(/\\u0027/g, '"').replace(/'/g, '"');
                             const works = JSON.parse(workExp);
+                            console.log(works)
                             if (Array.isArray(works) && works.length > 0) {
-                                workHtml = '<div class="mb-2"><h5 class="fw-bold text-primary mb-2">工作经历</h5></div>';
+                                // workHtml = '<div class="mb-2"><h5 class="fw-bold text-primary mb-2">工作经历</h5></div>';
+                                workHtml = '<div class="mb-2"><div class="section-title">工作经历</div></div>';
                                 works.forEach((w, idx) => {
+                                    // workHtml += `
+                                    //     <div class="border rounded p-2 mb-2">
+                                    //         <div><span class="fw-bold">公司：</span>${w.company || ''}</div>
+                                    //         <div><span class="fw-bold">时间：</span>${w.employment_period || ''}</div>
+                                    //         <div><span class="fw-bold">岗位：</span>${w.job_name || ''}</div>
+                                    //         <div><span class="fw-bold">部门：</span>${w.department || ''}</div>
+                                    //         <div><span class="fw-bold">职责：</span>${w.responsibilities || ''}</div>
+                                    //     </div>
+                                    // `;
+
                                     workHtml += `
-                                        <div class="border rounded p-2 mb-2">
-                                            <div><span class="fw-bold">公司：</span>${w.company || ''}</div>
-                                            <div><span class="fw-bold">时间：</span>${w.employment_period || ''}</div>
-                                            <div><span class="fw-bold">岗位：</span>${w.job_name || ''}</div>
-                                            <div><span class="fw-bold">部门：</span>${w.department || ''}</div>
-                                            <div><span class="fw-bold">职责：</span>${w.responsibilities || ''}</div>
-                                        </div>
+                                        <div class="job-container">
+                                            <div class="job-details">
+                                                <div class="job-header-line">
+                                                    <div><span class="job-date">时间：</span>${w.employment_period || ''}</div>
+                                                    <div><span class="company-name">公司：</span>${w.company || ''}</div>
+                                                </div>
+                                                <table class="job-details-table">
+                                                    <tr>
+                                                        <th>岗位</th>
+                                                        <td>${w.job_name || ''}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>部门</th>
+                                                        <td>${w.department || w['所在部门'] ||''}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>职责</th>
+                                                        <td>${w.responsibilities || w['职责业绩'] ||''}</td>
+                                                    </tr>
+
+                                                </table>    
+                                            </div>    
+                                        </div>  
                                     `;
                                 });
                             }
@@ -240,7 +293,7 @@
                     });
             });
         });
-
+        
         // 评分历史点击事件
         document.querySelectorAll('.score-clickable').forEach(span => {
             span.addEventListener('click', function () {
@@ -394,5 +447,76 @@
 
 </script>
 
+<style>
+    .job-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 20px;
+        }
+        
+        .job-container:last-child {
+            border-bottom: none;
+        }
+        
+        .job-date {
+            width: 140px; /* 时间列宽度固定 */
+            padding-right: 15px;
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .job-details {
+            flex: 1;
+        }
+        
+        .company-name {
+            font-size: 15px;
+            color: #1e88e5;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        /* 工作经历表格样式 - 优化对齐 */
+        .job-details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            table-layout: fixed; /* 确保表头对齐 */
+        }
+        
+        .job-details-table th,
+        .job-details-table td {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+            vertical-align: top;
+        }
+        
+        .job-details-table th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+            color: #444;
+            width: 25%; /* 表头宽度固定 */
+        }
+        
+        .job-details-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .job-details-list {
+            padding-left: 20px;
+        }
+        
+        .job-details-list li {
+            margin-bottom: 5px;
+        }
 
+        .job-header-line {
+            display: flex;       /* 启用flex布局保持在一行 */
+            gap: 20px;           /* 添加元素间距 */
+            margin-bottom: 15px; /* 底部留白 */
+        }
+</style>
 {% endblock %}

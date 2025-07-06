@@ -402,7 +402,9 @@ def match_result(request, job_id):
         page_obj = []
 
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
-        return render(request, "jobs/match_result_table.html", {"page_obj": page_obj, "job": job})
+        return render(
+            request, "jobs/match_result_table.html", {"page_obj": page_obj, "job": job}
+        )
     else:
         return render(
             request, "jobs/match_result.html", {"job": job, "page_obj": page_obj}
