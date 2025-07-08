@@ -315,7 +315,7 @@ def start_matching(request, job_id):
     job = get_object_or_404(JobPosition, pk=job_id)
 
     try:
-        async_run_matching_for_job.delay(job_id)
+        async_run_matching_for_job.delay(job_id, request.user.id)
         messages.success(request, f'岗位"{job.name}"匹配任务已启动。')
     except Exception as e:
         messages.error(request, f"启动匹配失败：{str(e)}")

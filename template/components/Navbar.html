@@ -50,7 +50,19 @@
                         <a href=# class="nav-link {% if request.path|first_path_segment == 'interview' %}active{% endif %}">面试</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link {% if request.path|first_path_segment == 'chat' %}active{% endif %}">消息</a>
+                        <a href="{% url 'mail_list' %}" class="nav-link {% if request.path|first_path_segment == 'notifications' %}active{% endif %}">
+                        消息
+                        {% if unread_notification_count > 0 %}
+                            <span class="position-relative">
+                            <span 
+                                class="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle p-1"
+                                style="font-size: 0.65rem; width: 1.25rem; height: 1.25rem; line-height: 1.25rem;">
+                                {{ unread_notification_count }}
+                            </span>
+                            </span>
+                        {% endif %}
+                        </a>
+
                     </li>
                 </ul>
             </div>
@@ -117,7 +129,12 @@
   text-align: center;
 }
 
-
+.badge.rounded-circle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+}
 
 </style>
 

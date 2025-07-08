@@ -1,4 +1,6 @@
+import datetime
 from django.db import models
+from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from resumes.models import Resume
@@ -69,6 +71,9 @@ class JobMatchTask(models.Model):
     )
     last_processed_resume_id = models.CharField(max_length=32, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+    initiator = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     def __str__(self):
         return f"{self.job.name} 匹配任务（{self.status}）"
@@ -124,7 +129,7 @@ class Interview(models.Model):
         default="未安排",
         verbose_name="面试状态",
     )
-    interview_date = models.DateTimeField("面试时间")
+    interview_date = models.DateTimeField("面试时间", default=datetime.date.today)
     interviewer = models.CharField(
         max_length=255, verbose_name="面试官", blank=True, null=True
     )

@@ -1,0 +1,112 @@
+{% extends "Layout.html" %}
+
+{% block content %}
+<section class="container mt-5">
+  <div class="section-title mb-3">
+    <h2>系统通知</h2>
+  </div>
+
+  <!-- 检索栏 -->
+  <form method="get" class="mb-3">
+    <div class="input-group input-group-sm">
+      <input
+        type="text"
+        name="q"
+        class="form-control"
+        placeholder="输入关键词搜索通知标题..."
+        autocomplete="off"
+        value="{{ query|default:'' }}"
+      >
+      <button class="btn btn-primary" type="submit">搜索</button>
+    </div>
+  </form>
+
+  <!-- 一键标记全部已读 -->
+  <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmMarkAllReadModal">
+    全部标记为已读
+  </button>
+
+  <!-- 模态框 -->
+  <div class="modal fade" id="confirmMarkAllReadModal" tabindex="-1" aria-labelledby="confirmMarkAllReadLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="post" action="{% url 'mark_all_notifications_read' %}">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="confirmMarkAllReadLabel">确认操作</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+          </div>
+          <div class="modal-body">
+            确定要将所有通知标记为已读吗？
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">取消</button>
+            <button type="submit" class="btn btn-primary">确认</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% if page_obj.object_list %}
+    <div class="text-center mb-2 ms-1">
+      <strong>
+        显示第 {{ page_obj.start_index }} - {{ page_obj.end_index }} 条，共 {{ page_obj.paginator.count }} 条通知
+      </strong>
+    </div>
+
+    <table class="table table-bordered table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <!-- <th>标题</th> -->
+          <th>内容</th>
+          <th>类型</th>
+          <th>时间</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for notification in page_obj.object_list %}
+          <tr>
+            <!-- <td>
+              {% if not notification.is_read %}
+                <span class="badge bg-warning text-dark me-1">未读</span>
+              {% endif %}
+              {{ notification.title }}
+            </td> -->
+            <td style="max-width: 500px;">
+              <div style="width: 100%; white-space: nowrap; overflow-x: auto; border: 1px solid #ddd; padding: 4px; border-radius: 4px;">
+                {{ notification.content|safe }}
+              </div>
+            </td>
+            <td>{{ notification.get_notification_type_display }}</td>
+            <td>{{ notification.created_at|date:"Y-m-d H:i:s" }}</td>
+            <td>
+              {% if notification.is_read %}
+                <span class="text-success">已读</span>
+              {% else %}
+                <span class="text-danger">未读</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if notification.link_url %}
+                <a href="{{ notification.link_url }}" class="btn btn-sm btn-outline-primary" target="_blank">查看详情</a>
+              {% endif %}
+
+              {% if not notification.is_read %}
+                <a href="{% url 'mark_notification_read' notification.id %}" class="btn btn-sm btn-outline-success">标记为已读</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% include "components/Pager.html" %}
+  {% else %}
+    <p class="text-muted">暂无通知。</p>
+  {% endif %}
+</section>
+{% endblock %}

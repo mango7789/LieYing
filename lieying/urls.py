@@ -33,6 +33,8 @@ urlpatterns = [
     path("job/", include("jobs.urls")),
     # 打分（匹配）模块
     path("match/", include("match.urls")),
+    # 消息模块
+    path("notifications/", include("notifications.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,14 +1,19 @@
 import logging
 from datetime import datetime
-from resumes.models import Resume
-from jobs.models import JobPosition
-from .models import Matching, JobMatchTask
-from .matcher import ResumeJobMatcher
 from django.db import transaction
 from django.core.cache import cache
 from django.conf import settings
+from django.contrib.auth.models import User
 from celery import shared_task
 from celery.signals import worker_ready
+
+
+from .models import Matching, JobMatchTask
+from .matcher import ResumeJobMatcher
+from resumes.models import Resume
+from jobs.models import JobPosition
+from notifications.models import Notification
+
 
 ###########################################################
 #                     Configuration                       #
@@ -120,15 +125,45 @@ def run_resume_job_matching(job_id: int, overwrite_existing: bool = False) -> di
     return summary
 
 
-def run_matching_for_job(job_id: int):
+def run_matching_for_job(job_id: int, initiator: User):
+    if initiator is None:
+        try:
+            initiator = User.objects.get(id=4)
+        except User.DoesNotExist:
+            raise ValueError("找不到默认的 initiator 用户（id=1）")
+
     job = JobPosition.objects.get(id=job_id)
-    task, created = JobMatchTask.objects.get_or_create(job=job)
+    task, created = JobMatchTask.objects.get_or_create(
+        job=job, defaults={"initiator": initiator}
+    )
+
+    # 如果任务之前创建但 initiator 是空的，也更新它
+    if not created and not task.initiator:
+        task.initiator = initiator
+        task.save()
+
+    match_result_link = f"/job/match/result/{task.id}"
+    job_detail = f"<strong>{job.company} - {job.name}</strong>"
 
     if task.status == "匹配中" and task.last_processed_resume_id:
+        Notification.objects.create(
+            recipient=initiator,
+            notification_type=Notification.NotificationType.SCORE_STARTED,
+            title=f"岗位《{job_detail}》匹配任务重启",
+            content=f"岗位 {job_detail} 的自动匹配任务被重启，将继续处理剩余简历。",
+            link_url=match_result_link,
+        )
         resumes = Resume.objects.filter(
             resume_id__gt=task.last_processed_resume_id
         ).order_by("resume_id")
     else:
+        Notification.objects.create(
+            recipient=initiator,
+            notification_type=Notification.NotificationType.SCORE_STARTED,
+            title=f"岗位《{job_detail}》匹配任务启动",
+            content=f"岗位 {job_detail} 的自动匹配任务已启动，请耐心等待结果。",
+            link_url=match_result_link,
+        )
         # 新任务
         resumes = Resume.objects.all()
         with transaction.atomic():
@@ -210,9 +245,18 @@ def run_matching_for_job(job_id: int):
             failed_count += 1
 
     # 匹配完毕
-    task.status = "已完成"
-    task.last_processed_resume_id = None
-    task.save()
+    with transaction.atomic():
+        task.status = "已完成"
+        task.last_processed_resume_id = None
+        task.save()
+        Notification.objects.create(
+            recipient=initiator,
+            notification_type=Notification.NotificationType.SCORE_SUCCESS,
+            title=f"岗位《{job_detail}》匹配任务完成",
+            content=f"岗位 {job_detail} 的自动匹配任务已完成，共处理 {processed_count} 条简历。",
+            is_important=True,
+            link_url=match_result_link,
+        )
 
     matcher.cleanup()
 
@@ -229,13 +273,14 @@ def run_matching_for_job(job_id: int):
 
 
 @shared_task(bind=True)
-def async_run_matching_for_job(self, job_id):
+def async_run_matching_for_job(self, job_id, initiator_id):
     lock_key = f"lock:match:{job_id}"
     if not acquire_lock(lock_key, timeout=600):
         return "Skipped due to lock"
 
     try:
-        result = run_matching_for_job(job_id)
+        initiator = User.objects.get(id=initiator_id) if initiator_id else None
+        result = run_matching_for_job(job_id, initiator)
         return result
     except Exception as exc:
         raise self.retry(exc=exc, countdown=60, max_retries=3)
@@ -249,4 +294,6 @@ def at_celery_start(sender, **kwargs):
         logging.info("Celery worker started. Resuming unfinished matching tasks...")
         tasks = JobMatchTask.objects.filter(status="匹配中")
         for task in tasks:
-            async_run_matching_for_job.apply_async(args=[task.job_id], connection=conn)
+            async_run_matching_for_job.apply_async(
+                args=[task.job_id, task.initiator], connection=conn
+            )
