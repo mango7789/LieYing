@@ -214,6 +214,8 @@ def run_matching_for_job(job_id: int):
     task.last_processed_resume_id = None
     task.save()
 
+    matcher.cleanup()
+
     logger.info(
         f"岗位 {job.name} 匹配完成，处理 {processed_count} 条，失败 {failed_count} 条，总共 {total} 条"
     )

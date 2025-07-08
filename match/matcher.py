@@ -270,7 +270,7 @@ class ResumeJobMatcher:
     ) -> Dict[str, Any]:
         prompt = self.generate_prompt(resume, job)
         response = self.generate_response(prompt)
-        self.cleanup()
+        # self.cleanup()
         return self.extract_json_response(response)
 
     def evaluate_from_files(self, resume_file: str, job_file: str) -> Dict[str, Any]:
