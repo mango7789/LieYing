@@ -81,23 +81,7 @@ class JobMatchTask(models.Model):
 
 ############# 面试 ###############
 
-INTERVIEW_STAGE_CHOICES = [
-    ("初试", "初试"),
-    ("复试", "复试"),
-    ("终面", "终面"),
-]
 
-INTERVIEW_STATUS_CHOICES = [
-    ("未安排", "未安排"),
-    ("进行中", "进行中"),
-    ("已完成", "已完成"),
-    ("已取消", "已取消"),
-]
-
-INTERVIEW_RESULT_CHOICES = [
-    ("通过", "通过"),
-    ("不通过", "不通过"),
-]
 
 
 class Tag(models.Model):
@@ -108,6 +92,24 @@ class Tag(models.Model):
 
 
 class Interview(models.Model):
+    INTERVIEW_STAGE_CHOICES = [
+        ("初试", "初试"),
+        ("复试", "复试"),
+        ("终面", "终面"),
+    ]
+
+    INTERVIEW_STATUS_CHOICES = [
+        ("未安排", "未安排"),
+        ("进行中", "进行中"),
+        ("已完成", "已完成"),
+        ("已取消", "已取消"),
+    ]
+
+    INTERVIEW_RESULT_CHOICES = [
+        ("通过", "通过"),
+        ("不通过", "不通过"),
+    ]
+
     resume = models.ForeignKey(
         Resume, on_delete=models.CASCADE, verbose_name="简历", related_name="interviews"
     )

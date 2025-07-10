@@ -1,6 +1,8 @@
-from . import views as match_view
 from django.urls import path
+from .views import InterviewListView
+from . import views
 
 urlpatterns = [
-    path("list/", match_view.match_list, name="match_list"),
+    path("interviews/", InterviewListView.as_view(), name="interview_list"),
+    path('interviews/<int:pk>/', views.interview_detail, name='interview_detail'),
 ]

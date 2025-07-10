@@ -1,0 +1,71 @@
+<div class="table-responsive">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>候选人</th>
+        <th>岗位</th>
+        <th>面试阶段</th>
+        <th>面试状态</th>
+        <th>面试时间</th>
+        <th>面试官</th>
+        <th>面试结果</th>
+        <th>综合评分</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for interview in interviews %}
+      <tr>
+        <td>{{ interview.resume.name }}</td>
+        <td>{{ interview.job.name }}</td>
+        <td>{{ interview.get_stage_display }}</td>
+        <td>
+          <span class="badge 
+            {% if interview.status == '已完成' %}bg-success
+            {% elif interview.status == '已安排' %}bg-primary
+            {% else %}bg-secondary{% endif %}">
+            {{ interview.get_status_display }}
+          </span>
+        </td>
+        <td>{{ interview.interview_date|date:"Y-m-d H:i" }}</td>
+        <td>{{ interview.interviewer|default:"未指定" }}</td>
+        <td>
+          {% if interview.result %}
+            <span class="badge 
+              {% if interview.result == '通过' %}bg-success
+              {% elif interview.result == '待定' %}bg-warning
+              {% else %}bg-danger{% endif %}">
+              {{ interview.get_result_display }}
+            </span>
+          {% else %}
+            <span class="badge bg-secondary">未评定</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if interview.score %}
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar 
+                {% if interview.score >= 80 %}bg-success
+                {% elif interview.score >= 60 %}bg-primary
+                {% else %}bg-danger{% endif %}" 
+                role="progressbar" style="width: {{ interview.score }}%" 
+                aria-valuenow="{{ interview.score }}" aria-valuemin="0" aria-valuemax="100">
+                {{ interview.score }}
+              </div>
+            </div>
+          {% else %}
+            <span class="text-muted">未评分</span>
+          {% endif %}
+        </td>
+        <td>
+          <a href="#" class="btn btn-sm btn-outline-primary">详情</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="9" class="text-center text-muted">暂无面试记录</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

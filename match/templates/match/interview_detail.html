@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <h1>面试详情</h1>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">{{ interview.title }}</h5>
+      <p class="card-text">
+        <strong>状态:</strong> {{ interview.get_status_display }}<br>
+        <strong>时间:</strong> {{ interview.interview_date|date:"Y-m-d H:i" }}<br>
+        <strong>面试官:</strong> {{ interview.interviewer|default:"未指定" }}<br>
+        <strong>结果:</strong> {{ interview.get_result_display|default:"待定" }}
+      </p>
+      <a href="{% url 'interview_list' %}" class="btn btn-primary">返回列表</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

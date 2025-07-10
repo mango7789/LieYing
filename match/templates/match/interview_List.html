@@ -1,0 +1,135 @@
+{% extends "Layout.html" %}
+{% load static %}
+
+{% block content %}
+<section class="features">
+  <div class="section-title">
+    <h2>面试列表</h2>
+  </div>
+
+  <!-- 筛选表单 -->
+  <form method="get" id="filter-form" class="feature-card">
+    <!-- 关键词搜索 -->
+    <div class="input-group input-group-sm mb-3">
+      <input
+        type="text"
+        name="keyword"
+        class="form-control"
+        placeholder="搜索面试官、地点、反馈..."
+        value="{{ filter_keyword }}"
+      >
+      <button class="btn btn-primary" type="submit">搜索</button>
+    </div>
+
+    <!-- 重置按钮 -->
+    <button type="button" id="reset-btn" class="btn btn-outline-secondary btn-sm mb-3">
+      🔄 重置
+    </button>
+
+    <!-- 面试阶段筛选 -->
+    <div class="mb-3">
+      <label class="form-label">面试阶段</label>
+      <select name="stage" class="form-select form-select-sm">
+        <option value="">全部</option>
+        {% for value, label in stage_choices %}
+          <option value="{{ value }}" {% if value == selected_stage %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- 面试状态筛选 -->
+    <div class="mb-3">
+      <label class="form-label">状态</label>
+      <select name="status" class="form-select form-select-sm">
+        <option value="">全部</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if value == selected_status %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- 面试结果筛选 -->
+    <div class="mb-3">
+      <label class="form-label">结果</label>
+      <select name="result" class="form-select form-select-sm">
+        <option value="">全部</option>
+        {% for value, label in result_choices %}
+          <option value="{{ value }}" {% if value == selected_result %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+</section>
+
+<!-- 面试列表表格 -->
+<section class="stats">
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>候选人</th>
+          <th>岗位</th>
+          <th>阶段</th>
+          <th>状态</th>
+          <th>面试时间</th>
+          <th>面试官</th>
+          <th>结果</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for interview in interviews %}
+          <tr>
+            <td>{{ interview.resume.name }}</td>
+            <td>{{ interview.job.name }}</td>
+            <td>{{ interview.get_stage_display }}</td>
+            <td>{{ interview.get_status_display }}</td>
+            <td>{{ interview.interview_date|date:"Y-m-d H:i" }}</td>
+            <td>{{ interview.interviewer|default:"-" }}</td>
+            <td>
+              <span class="badge bg-{% if interview.result == '通过' %}success{% else %}warning{% endif %}">
+                {{ interview.get_result_display|default:"待定" }}
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'interview_detail' interview.id %}" class="btn btn-sm btn-info">详情</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8" class="text-center">暂无面试记录</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 分页 -->
+  {% include "includes/pagination.html" %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 筛选和分页的JavaScript -->
+<script src="{% static 'interviews/filter.js' %}"></script>
+
+<script>
+// 重置按钮功能
+document.getElementById("reset-btn").addEventListener("click", function() {
+  const form = document.getElementById("filter-form");
+  form.reset();
+  window.location.search = ""; // 清空URL参数
+});
+
+// AJAX分页（如果需要）
+$(document).ready(function() {
+  // 类似Resume页面的分页逻辑
+});
+</script>
+{% endblock %}
