@@ -82,8 +82,6 @@ class JobMatchTask(models.Model):
 ############# 面试 ###############
 
 
-
-
 class Tag(models.Model):
     name = models.CharField(max_length=50, verbose_name="标签名称")
 
