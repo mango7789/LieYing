@@ -29,4 +29,5 @@ urlpatterns = [
         views.get_matching_report,
         name="get_matching_report",
     ),
+    path("match/config/<int:pk>/", views.match_configure, name="match_configure"),
 ]

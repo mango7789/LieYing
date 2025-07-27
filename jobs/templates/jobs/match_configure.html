@@ -1,0 +1,58 @@
+{% extends "Layout.html" %}
+{% load custom_tags %}
+{% block content %}
+<div class="container my-5">
+    <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">配置权重 - {{ job.name }}</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <h5 class="mb-3">字段权重</h5>
+                <div class="row g-3">
+                    {% for field in field_names %}
+                    <div class="col-md-4 col-sm-6">
+                        <label class="form-label fw-semibold" for="{{ field }}_weight">{{ field_label_map|get_item:field }} 权重</label>
+                        <input id="{{ field }}_weight" type="number" step="0.1" min="0" max="10" class="form-control" name="{{ field }}_weight"
+                            value="{{ field_weight|get_attr:field }}" required>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <hr class="my-4">
+
+                <h5 class="mb-3">学历要求分数</h5>
+                <div class="row g-3">
+                    {% for val, label in EDUCATION_CHOICES %}
+                    <div class="col-md-3 col-sm-4 col-6">
+                        <label class="form-label" for="education_{{ val }}">{{ label }}</label>
+                        <input id="education_{{ val }}" type="number" step="0.1" min="0" max="10" class="form-control" name="education_{{ val }}_score"
+                            value="{{ education_weights|get_item:val }}" required>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <hr class="my-4">
+
+                <h5 class="mb-3">工作年限分数</h5>
+                <div class="row g-3">
+                    {% for val, label in WORK_EXPERIENCE_CHOICES %}
+                    <div class="col-md-3 col-sm-4 col-6">
+                        <label class="form-label" for="work_experience_{{ val }}">{{ label }}</label>
+                        <input id="work_experience_{{ val }}" type="number" step="0.1" min="0" max="10" class="form-control" name="work_experience_{{ val }}_score"
+                            value="{{ work_experience_weights|get_item:val }}" required>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'jobs:job_list' company=job.company %}" class="btn btn-outline-secondary px-4">取消</a>
+                    <button type="submit" class="btn btn-success px-4">保存权重配置</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

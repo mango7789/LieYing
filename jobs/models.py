@@ -54,6 +54,37 @@ class JobPosition(models.Model):
         return [item.strip() for item in items if item.strip()]
 
 
+class JobFieldWeight(models.Model):
+    job = models.OneToOneField(
+        JobPosition, on_delete=models.CASCADE, related_name="field_weights"
+    )
+    city_weight = models.FloatField(default=1.0)
+    salary_weight = models.FloatField(default=1.0)
+    work_experience_weight = models.FloatField(default=1.0)
+    education_weight = models.FloatField(default=1.0)
+    language_weight = models.FloatField(default=1.0)
+    requirements_weight = models.FloatField(default=10)
+    responsibilities_weight = models.FloatField(default=10)
+
+    class Meta:
+        verbose_name = "字段权重"
+        verbose_name_plural = "字段权重"
+
+
+class JobChoiceWeight(models.Model):
+    job = models.ForeignKey(
+        JobPosition, on_delete=models.CASCADE, related_name="choice_weights"
+    )
+    field_name = models.CharField(max_length=50)
+    choice_value = models.CharField(max_length=100)
+    score = models.FloatField(default=1.0)
+
+    class Meta:
+        verbose_name = "选项权重"
+        verbose_name_plural = "选项权重"
+        unique_together = ("job", "field_name", "choice_value")
+
+
 class JobOwner(models.Model):
     job = models.ForeignKey(
         JobPosition,

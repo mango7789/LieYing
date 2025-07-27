@@ -9,9 +9,9 @@ from django.views.decorators.http import require_POST, require_GET
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils import timezone
 
-from .models import JobPosition, UserScore
+from .models import JobPosition, UserScore, JobFieldWeight, JobChoiceWeight
 from .forms import JobForm
-from .constants import CITY_CHOICES, EDUCATION_CHOICES, WORK_EXPERIENCE_CHOICES
+from .constants import *
 from match.models import Matching, JobMatchTask
 from match.services import async_run_matching_for_job
 from resumes.models import Resume
@@ -50,7 +50,7 @@ def company_list(request):
         job["task_status"] = task_status
         # job["processing"] = processing
         # job["total"] = total
-        job["percent"] = round(processing / total * 100, 2)
+        job["percent"] = round(processing / total * 100, 2) if total != 0 else 0.0
 
     companies = list(company_dict.values())
     return render(request, "jobs/company_list.html", {"companies": companies})
@@ -69,7 +69,9 @@ def job_list(request, company):
         job.task_status = task_status
         job.processing = processing
         job.total = total
-        job.percent = round(job.processing / job.total * 100, 2)
+        job.percent = (
+            round(job.processing / job.total * 100, 2) if job.total != 0 else 0.0
+        )
 
     return render(request, "jobs/job_list.html", {"jobs": jobs, "company": company})
 
@@ -306,6 +308,127 @@ def job_delete(request, pk):
 ###########################################################
 #                         Match                           #
 ###########################################################
+
+
+@login_required
+def match_configure(request, pk):
+    job = get_object_or_404(JobPosition, pk=pk)
+    field_weight, _ = JobFieldWeight.objects.get_or_create(job=job)
+
+    # 定义所有选项权重
+    all_choice_fields = {
+        "education": DEFAULT_EDUCATION_WEIGHTS,
+        "work_experience": DEFAULT_WORK_EXPERIENCE_WEIGHTS,
+    }
+
+    # 检查是否初始化过选项权重，不足则初始化
+    total_expected = sum(len(v) for v in all_choice_fields.values())
+    existing_count = job.choice_weights.count()
+
+    if existing_count < total_expected:
+        # 批量创建缺失的 JobChoiceWeight 记录
+        for field_name, default_weights in all_choice_fields.items():
+            existing_choices = set(
+                job.choice_weights.filter(field_name=field_name).values_list(
+                    "choice_value", flat=True
+                )
+            )
+            to_create = []
+            for choice_value, score in default_weights.items():
+                if choice_value not in existing_choices:
+                    to_create.append(
+                        JobChoiceWeight(
+                            job=job,
+                            field_name=field_name,
+                            choice_value=choice_value,
+                            score=score,
+                        )
+                    )
+            if to_create:
+                JobChoiceWeight.objects.bulk_create(to_create)
+
+    if request.method == "POST":
+        # 更新字段权重
+        for field in [
+            "city",
+            "salary",
+            "work_experience",
+            "education",
+            "language",
+            "requirements",
+            "responsibilities",
+        ]:
+            key = f"{field}_weight"
+            weight_val = request.POST.get(key)
+            if weight_val:
+                setattr(field_weight, key, float(weight_val))
+        field_weight.save()
+
+        # 更新选项权重
+        for field in ["education", "work_experience"]:
+            choices = dict(
+                EDUCATION_CHOICES if field == "education" else WORK_EXPERIENCE_CHOICES
+            )
+            for choice in choices.keys():
+                score_key = f"{field}_{choice}_score"
+                val = request.POST.get(score_key)
+                if val:
+                    JobChoiceWeight.objects.update_or_create(
+                        job=job,
+                        field_name=field,
+                        choice_value=choice,
+                        defaults={"score": float(val)},
+                    )
+
+        messages.success(request, "权重配置已保存")
+        return redirect("jobs:job_list", company=job.company)
+
+    # 读取数据库中已有的选项权重，构成字典方便后面合并
+    db_choice_weights = {
+        cw.field_name: {
+            cw.choice_value: cw.score
+            for cw in job.choice_weights.filter(field_name=cw.field_name)
+        }
+        for cw in job.choice_weights.all()
+    }
+
+    # 合并默认权重和数据库权重，优先用数据库权重
+    def merge_weights(default_dict, db_dict):
+        return default_dict if db_dict is None else db_dict
+
+    # 传给模板的权重字典：字段权重直接用field_weight模型实例，选项权重合并后传字典
+    context = {
+        "job": job,
+        "field_weight": field_weight,
+        "field_names": [
+            "city",
+            "salary",
+            "work_experience",
+            "education",
+            "language",
+            "requirements",
+            "responsibilities",
+        ],
+        "field_label_map": {
+            "city": "城市",
+            "salary": "薪资",
+            "work_experience": "工作经验",
+            "education": "学历",
+            "language": "语言",
+            "requirements": "岗位要求",
+            "responsibilities": "岗位职责",
+        },
+        "EDUCATION_CHOICES": EDUCATION_CHOICES,
+        "WORK_EXPERIENCE_CHOICES": WORK_EXPERIENCE_CHOICES,
+        "education_weights": merge_weights(
+            DEFAULT_EDUCATION_WEIGHTS, db_choice_weights.get("education")
+        ),
+        "work_experience_weights": merge_weights(
+            DEFAULT_WORK_EXPERIENCE_WEIGHTS, db_choice_weights.get("work_experience")
+        ),
+    }
+
+    return render(request, "jobs/match_configure.html", context)
 
 
 @login_required

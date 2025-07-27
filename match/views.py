@@ -2,11 +2,12 @@ from django.views.generic import ListView
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import Interview
 
 
-class InterviewListView(ListView):
+class InterviewListView(LoginRequiredMixin, ListView):
     model = Interview
     template_name = "match/interview_List.html"  # 模板路径
     context_object_name = "interviews"  # 模板中使用的变量名

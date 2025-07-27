@@ -75,6 +75,10 @@ class JobMatchTask(models.Model):
         User, null=True, blank=True, on_delete=models.SET_NULL
     )
 
+    class Meta:
+        verbose_name = "岗位匹配任务"
+        verbose_name_plural = "岗位匹配任务"
+
     def __str__(self):
         return f"{self.job.name} 匹配任务（{self.status}）"
 

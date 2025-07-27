@@ -96,14 +96,17 @@
                             <a href="{% url 'jobs:match_result' job.id %}" class="btn btn-sm btn-outline-success">
                                 <i class="bi bi-eye me-1"></i>查看结果
                             </a>
+                            <a href="{% url 'jobs:match_configure' job.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye me-1"></i>配置权重
+                            </a>
 
                             <a href="{% url 'jobs:job_update' job.id %}" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-pencil me-1"></i>编辑
                             </a>
 
-                            <button class="btn btn-sm btn-outline-danger delete-job-btn" data-job-id="{{ job.id }}">
+                            <!-- <button class="btn btn-sm btn-outline-danger delete-job-btn" data-job-id="{{ job.id }}">
                                 <i class="bi bi-trash me-1"></i>删除
-                            </button>
+                            </button> -->
                         </div>
                     </td>
                 </tr>
@@ -152,7 +155,7 @@
             document.getElementById('jobNamePreview').textContent = `职位名称: ${jobName}`;
 
             const form = document.getElementById('deleteJobForm');
-            form.action = `/jobs/delete/${jobId}/`;
+            form.action = `/job/delete/${jobId}/`;
 
             const modal = new bootstrap.Modal(document.getElementById('deleteJobModal'));
             modal.show();

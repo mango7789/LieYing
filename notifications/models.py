@@ -32,6 +32,8 @@ class Notification(models.Model):
         return f"{self.recipient.username} - {self.title[:20]} ({self.get_notification_type_display()})"
 
     class Meta:
+        verbose_name = "通知"
+        verbose_name_plural = "通知"
         indexes = [
             models.Index(fields=["recipient", "is_read"]),
             models.Index(fields=["recipient", "created_at"]),

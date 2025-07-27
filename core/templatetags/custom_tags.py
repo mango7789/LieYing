@@ -28,3 +28,24 @@ def mul(value, arg):
         return int(value) * int(arg)
     except (ValueError, TypeError):
         return ""
+
+
+@register.filter
+def get_attr(obj, attr):
+    return getattr(obj, f"{attr}_weight", "")
+
+
+@register.filter
+def get_item(dictionary, key):
+    if dictionary is None:
+        return None
+    return dictionary.get(key)
+
+
+@register.filter
+def get_item_with_default(dictionary, args):
+    """args 是 'key,default_value' 格式的字符串"""
+    if not dictionary:
+        return None
+    key, default = args.split(",")
+    return dictionary.get(key, default)
