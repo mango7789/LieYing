@@ -21,7 +21,11 @@
                     <h5>职位信息</h5>
                     <p><strong>职位名称：</strong>{{ job.name }}</p>
                     <p><strong>公司：</strong>{{ job.company }}</p>
-                    <p><strong>工作地点：</strong>{{ job.city }}</p>
+                    <p><strong>工作地点：</strong>
+                        {% for city in job.city.all %}
+                            {{ city.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
                     <p><strong>薪资：</strong>{{ job.salary }}</p>
                 </div>
                 <div class="col-md-6">

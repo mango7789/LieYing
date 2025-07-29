@@ -190,6 +190,7 @@ def job_create_general(request):
                 job = form.save(commit=False)
                 job.owner = request.user
                 job.save()
+                job.city.set(form.cleaned_data["city_objs"])
                 print("保存成功，职位ID:", job.id)  # 调试信息
                 messages.success(request, "职位添加成功！")
                 return redirect("jobs:company_list")
@@ -229,6 +230,7 @@ def job_create(request, company):
                 job.company = company  # 强制使用URL中的公司名
                 job.owner = request.user
                 job.save()
+                job.city.set(form.cleaned_data["city_objs"])
                 messages.success(request, "职位添加成功！")
                 return redirect("jobs:job_list", company=company)
             except Exception as e:
@@ -243,7 +245,7 @@ def job_create(request, company):
 
     return render(
         request,
-        "jobs/job_form.html",
+        "jobs/job_form_general.html",
         {
             "form": form,
             "company": company,
@@ -265,6 +267,7 @@ def job_update(request, pk):
                 job = form.save(commit=False)
                 job.owner = request.user
                 job.save()
+                job.city.set(form.cleaned_data["city_objs"])
                 messages.success(request, "职位信息更新成功！")
                 return redirect("jobs:job_list", company=job.company)
             except Exception as e:
@@ -279,7 +282,7 @@ def job_update(request, pk):
 
     return render(
         request,
-        "jobs/job_form.html",
+        "jobs/job_form_general.html",
         {
             "form": form,
             "company": job.company,
@@ -448,19 +451,19 @@ def start_matching(request, job_id):
 
 @login_required
 def match_result(request, job_id):
-    """查看匹配结果"""
     job = get_object_or_404(JobPosition, pk=job_id)
 
     try:
-        matchings = Matching.objects.select_related("resume").filter(
-            job=job, task_status="已完成"
+        matchings_qs = (
+            Matching.objects.select_related("resume")
+            .filter(job=job, task_status="已完成")
+            .order_by("-score")
         )
 
-        resumes_data = []
-
-        for m in matchings:
+        # 先构建全部数据的字典列表（根据需要，你可以加缓存或优化）
+        all_resumes_data = []
+        for m in matchings_qs:
             resume = m.resume
-            # 获取最新用户评分
             latest_user_score = (
                 UserScore.objects.filter(job=m.job, resume=resume)
                 .select_related("user")
@@ -468,7 +471,6 @@ def match_result(request, job_id):
                 .first()
             )
 
-            # 分数显示逻辑：优先用户评分，没有时显示机器评分
             if latest_user_score:
                 display_score = latest_user_score.user_match_score
                 score_source = latest_user_score.user.username
@@ -478,7 +480,7 @@ def match_result(request, job_id):
                 score_source = "系统"
                 score_source_type = "system"
 
-            resumes_data.append(
+            all_resumes_data.append(
                 {
                     "resume_id": resume.resume_id,
                     "name": resume.name,
@@ -488,7 +490,7 @@ def match_result(request, job_id):
                     ),
                     "score_source": score_source,
                     "score_source_type": score_source_type,
-                    "machine_score": m.score,  # 机器评分，用于历史记录
+                    "machine_score": m.score,
                     "user_score_count": UserScore.objects.filter(
                         job=m.job, resume=resume
                     ).count(),
@@ -507,12 +509,8 @@ def match_result(request, job_id):
                 }
             )
 
-        # 按最新显示分数排序（降序）
-        resumes_data.sort(key=lambda x: x["match_score"] or 0, reverse=True)
-
-        # 分页逻辑
-        paginator = Paginator(resumes_data, 8)
-        page = request.GET.get("page")
+        paginator = Paginator(all_resumes_data, 8)
+        page = request.GET.get("page", 1)
         try:
             page_obj = paginator.page(page)
         except PageNotAnInteger:

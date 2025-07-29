@@ -4,10 +4,17 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
 
+class City(models.Model):
+    name = models.CharField("城市名", max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class JobPosition(models.Model):
     name = models.CharField("岗位名称", max_length=100)
     company = models.CharField("企业名称", max_length=100)
-    city = models.CharField("工作地点", max_length=50)  # TODO: 用下拉框 + 城市列表
+    city = models.ManyToManyField(City, verbose_name="工作地点")
     salary = models.CharField("薪资", max_length=50, blank=True)
     work_experience = models.CharField("工作年限", max_length=50, blank=True)
     education = models.CharField("学历要求", max_length=50, blank=True)

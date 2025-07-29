@@ -165,7 +165,7 @@ def run_matching_for_job(job_id: int, initiator: User):
             link_url=match_result_link,
         )
         # 新任务
-        resumes = Resume.objects.all()
+        resumes = Resume.objects.filter(related_jobs=job)
         with transaction.atomic():
             task.status = "匹配中"
             task.last_processed_resume_id = None

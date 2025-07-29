@@ -22,19 +22,14 @@
                     {% endfor %}
                 </div>
 
-                <!-- 工作地点 - 带下拉和自定义 -->
+                <!-- 工作地点 多选下拉 -->
                 <div class="mb-3">
-                    <label class="form-label">工作地点*</label>
+                    <label for="id_city" class="form-label">工作地点*</label>
                     {{ form.city }}
-                    <div class="mt-2">
-                        {{ form.custom_city }}
-                    </div>
                     {% for error in form.city.errors %}
                     <div class="text-danger small">{{ error }}</div>
                     {% endfor %}
-                    {% for error in form.custom_city.errors %}
-                    <div class="text-danger small">{{ error }}</div>
-                    {% endfor %}
+                    <div class="form-text">可多选，支持搜索，选中项会以标签显示</div>
                 </div>
 
                 <!-- 表单错误提示 -->
@@ -124,7 +119,12 @@
                         <i class="bi bi-arrow-left me-1"></i>返回公司列表
                     </a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-lg me-1"></i>创建职位
+                        <i class="bi bi-check-lg me-1"></i>
+                        {% if form.instance.pk %}
+                            更新职位
+                        {% else %}
+                            创建职位
+                        {% endif %}
                     </button>
                 </div>
             </form>
@@ -138,35 +138,19 @@
   {% endfor %}
 {% endif %}
 
+<!-- 引入 jQuery 和 Select2 CSS/JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
-    // 城市选择处理逻辑
-    function checkCityCustom(select) {
-        const customInput = document.getElementById('custom-city-input');
-        const parentDiv = customInput.parentElement;
-
-        if (select.value === '其他') {
-            parentDiv.classList.remove('d-none');
-            customInput.required = true;
-        } else {
-            parentDiv.classList.add('d-none');
-            customInput.required = false;
-            customInput.value = '';
-        }
-    }
-
-    // 页面加载时初始化城市选择
-    document.addEventListener('DOMContentLoaded', function () {
-        const citySelect = document.querySelector('select[name="city"]');
-        if (citySelect) {
-            checkCityCustom(citySelect);
-        }
+$(document).ready(function() {
+    $('#id_city').select2({
+        placeholder: "请选择工作地点",
+        allowClear: true,
+        width: '100%',
     });
+});
 </script>
 
-<style>
-    /* 自定义城市输入框样式 */
-    #custom-city-input {
-        transition: all 0.3s ease;
-    }
-</style>
 {% endblock %}

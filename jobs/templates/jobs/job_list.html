@@ -36,7 +36,14 @@
                 {% for job in jobs %}
                 <tr data-job-id="{{ job.id }}">
                     <td>{{ job.name }}</td>
-                    <td>{{ job.city }}</td>
+                    <td>
+                        {% for city in job.city.all %}
+                            {{ city.name }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            无
+                        {% endfor %}
+                    </td>
+
                     <!-- <td>{{ job.salary|default:"面议" }}</td> -->
                     <td>{{ job.created_at|date:"Y-m-d" }}</td>
                     <td>{{ job.owner|default:"猎鹰" }}</td>
